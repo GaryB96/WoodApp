@@ -775,7 +775,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 	}
 
-	// Web Share API (files) - open native share sheet (shows OneDrive on Android if installed)
+	// Share / Save button: mobile uses native share sheet, desktop downloads the PDF
 	const shareBtn = document.getElementById('shareBtn');
 	if (shareBtn) {
 		shareBtn.addEventListener('click', async function () {
@@ -784,19 +784,32 @@ document.addEventListener('DOMContentLoaded', function () {
 				const { blob, suggestedName } = await generatePdfBlob(data);
 				const file = new File([blob], suggestedName, { type: 'application/pdf' });
 
-				// feature-detect file sharing
-				if (navigator.canShare && navigator.canShare({ files: [file] })) {
-					await navigator.share({ files: [file], title: suggestedName, text: 'Wood App Form' });
-				} else if (navigator.share && !navigator.canShare) {
-					// some browsers support share for text/URL only
-					await navigator.share({ title: suggestedName, text: 'Generated PDF is ready. Use Save/Export if you need to save locally.' });
+				// Simple mobile detection
+				const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+				const canShareFiles =
+					typeof navigator !== 'undefined' &&
+					navigator.canShare &&
+					navigator.canShare({ files: [file] });
+
+				if (isMobile && canShareFiles) {
+					// Mobile with full file-sharing support
+					await navigator.share({
+						files: [file],
+						title: suggestedName,
+						text: 'Wood App Form'
+					});
 				} else {
-					// fallback to Save-As picker
+					// Desktop (or mobile without file sharing): download/save the PDF
 					await saveBlobWithPicker(blob, suggestedName);
+					alert(
+						'PDF generated as "' +
+							suggestedName +
+						'". If no dialog appeared, check your Downloads folder.'
+					);
 				}
 			} catch (err) {
-				console.error('Share failed', err);
-				alert('Share failed: ' + (err && err.message ? err.message : err));
+				console.error('Share/Save failed', err);
+				alert('Share/Save failed: ' + (err && err.message ? err.message : err));
 			}
 		});
 	}
