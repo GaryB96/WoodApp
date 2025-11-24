@@ -13,14 +13,14 @@ document.addEventListener('DOMContentLoaded', function () {
 		addMaterialBtn.addEventListener('click', function () {
 			const tr = document.createElement('tr');
 			tr.innerHTML = `
-				<td><input type="text" name="type"></td>
-				<td><input type="text" name="make"></td>
-				<td><input type="text" name="model"></td>
-				<td><input type="text" name="installed_by"></td>
-				<td><input type="text" name="chimney_code"></td>
-				<td><input type="text" name="own_shared"></td>
-				<td><input type="text" name="chimney_condition"></td>
-				<td><button type="button" class="remove-row">×</button></td>
+				<td data-label="Type"><input type="text" name="type"></td>
+				<td data-label="Make"><input type="text" name="make"></td>
+				<td data-label="Model"><input type="text" name="model"></td>
+				<td data-label="Installed By"><input type="text" name="installed_by"></td>
+				<td data-label="Chimney Code"><input type="text" name="chimney_code"></td>
+				<td data-label="Own/Shared"><input type="text" name="own_shared"></td>
+				<td data-label="Chimney Condition"><input type="text" name="chimney_condition"></td>
+				<td data-label="Actions"><button type="button" class="remove-row">×</button></td>
 			`;
 			materialsTable.appendChild(tr);
 		});

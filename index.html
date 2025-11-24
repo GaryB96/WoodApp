@@ -52,7 +52,7 @@
         </thead>
         <tbody>
           <tr>
-            <td><select id="type">
+            <td data-label="Type"><select id="type">
                 <option value="Stove">S - Stove</option>
                 <option value="Kitchen Wood Range">R - Kitchen wood range</option>
                 <option value="Insert">I - Insert</option>
@@ -64,10 +64,10 @@
                 <option value="Outdoor Wood Boiler">OB - Outdoor wood boiler</option>
                 <option value="Masonry Fireplace">FP - Masonry fireplace</option>
             </td>
-            <td><input type="text" name="make"></td>
-            <td><input type="text" name="model"></td>
-            <td><input type="text" name="installed_by"></td>
-            <td>
+            <td data-label="Make"><input type="text" name="make"></td>
+            <td data-label="Model"><input type="text" name="model"></td>
+            <td data-label="Installed By"><input type="text" name="installed_by"></td>
+            <td data-label="Chimney Code">
               <div style="display:flex;gap:6px;align-items:center;">
                 <select name="chimney_major" id="chimney_major">
                   <option value="">Select</option>
@@ -86,24 +86,24 @@
                 </select>
               </div>
             </td>
-            <td><select id="own_shared" name="own_shared">
+            <td data-label="Own/Shared"><select id="own_shared" name="own_shared">
                 <option value="own">Own</option>
                 <option value="shared">Shared</option>
             </td>
-            <td><select id="chimney_condition" name="chimney_condition">
+            <td data-label="Chimney Condition"><select id="chimney_condition" name="chimney_condition">
                 <option value="1 - Very Good">1 - Very good</option>
                 <option value="2 - Good">2 - Good</option>
                 <option value="3 - Average">3 - Average</option>
                 <option value="4 - Poor">4 - Poor</option>
                 <option value="5 - Very Poor">5 - Very poor</option>
                 <option value="6 - Notify Underwriting">6 - Notify Underwriting</option>
-          </td>
-          <td><select name="shielding" id="shielding">
+            </td>
+          <td data-label="Shielding"><select name="shielding" id="shielding">
             <option value="No">No</option>
             <option value="Yes">Yes</option>
           </select>
           </td>
-          <td><select name="label" id="label">
+          <td data-label="Label"><select name="label" id="label">
             <option value="CSA B366">CSA B366</option>
             <option value="ULC S610">ULC S610</option>
             <option value="ULC S627">ULC S627</option>
