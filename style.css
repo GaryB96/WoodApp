@@ -1,0 +1,68 @@
+/* Basic styles matching current index.html structure */
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1 { text-align: center; }
+section { margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+input[type="text"], input[type="email"], input[type="number"], input[type="date"], textarea, select {
+  width: 98%; padding: 6px; box-sizing: border-box;
+}
+.materials-table th, .materials-table td { border: 1px solid #ddd; }
+.actions { margin-top: 12px; }
+.result { white-space: pre-wrap; background:#f7f7f7; padding:10px; border:1px solid #e1e1e1; }
+.floor-pad { font-weight: 700; font-size: 1.1em; }
+
+/* Small helper for remove button */
+.remove-row { background: #f8d7da; border: 1px solid #f5c2c7; color: #842029; padding: 2px 6px; cursor: pointer; }
+.remove-row:hover { opacity: 0.9; }
+
+/* Make table headers stand out */
+thead th { background: #f4f4f4; }
+
+/* Info button and tooltip for chimney code */
+.info-btn { background:#007acc; color:white; border:none; border-radius:3px; width:22px; height:22px; cursor:pointer; }
+.info-btn:focus { outline:2px solid #005a9e; }
+.tooltip { margin-top:6px; padding:8px; border:1px solid #ddd; background:#fffefc; font-size:0.95em; }
+.tooltip table { width:100%; border-collapse: collapse; margin-top:6px; }
+.tooltip td { border: none; padding:4px 6px; }
+
+/* Responsive improvements: form centered, inputs/table wrap and scroll on small screens */
+#woodAppForm { max-width: 980px; margin: 0 auto; }
+
+/* allow table cells to wrap text instead of overflowing */
+th, td { white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+
+/* make form controls adapt to container width */
+input[type="text"], input[type="email"], input[type="number"], input[type="date"], textarea, select {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ensure tables can scroll horizontally on small screens */
+.materials-table, #clearancesTable, table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Actions/buttons layout for small screens */
+.actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+.actions button { padding: 8px 12px; }
+
+/* smaller devices: stack buttons, reduce paddings and font sizes */
+@media (max-width: 700px) {
+  body { margin: 10px; }
+  .actions { flex-direction: column-reverse; }
+  .actions button { width: 100%; }
+  th, td { font-size: 13px; padding: 8px; }
+  h1 { font-size: 20px; }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  th, td { font-size: 14px; }
+}
+
+/* Make sure long selects/inputs don't overflow in table cells */
+td input, td select, td textarea { box-sizing: border-box; max-width: 100%; }
+

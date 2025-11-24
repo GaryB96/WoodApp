@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wood App Form</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { text-align: center; }
+    section { margin-bottom: 18px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    input[type="text"], input[type="email"], input[type="number"], input[type="date"], textarea, select { width: 98%; padding: 6px; box-sizing: border-box; }
+    .materials-table th, .materials-table td { border: 1px solid #ddd; }
+    .actions { margin-top: 12px; }
+    .result { white-space: pre-wrap; background:#f7f7f7; padding:10px; border:1px solid #e1e1e1; }
+    .floor-pad { font-weight: 700; font-size: 1.1em; }
+  </style>
+</head>
+<body>
+  <h1>Wood App Form</h1>
+
+  <form id="woodAppForm">
+    <section>
+        <label>Policy #:<br><input type="text" name="policy"></label><br>
+        <label>Survey date:<br><input type="date" name="survey_date"></label><br>
+        <label>Completed by:<br>
+            <select name="completed_by">
+              <option value="Gary Bryson">Gary Bryson</option>
+              <option value="Elliot Olscamp">Elliot Olscamp</option>
+            <option value="OTHER">Other</option>
+            </select>
+        </label>
+    </section>
+
+    <section>
+      <h2>Appliance</h2>
+      <table class="materials-table" id="materialsTable">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Installed By</th>
+            <th>Chimney Code</th>
+            <th>Own/Shared</th>
+            <th>Chimney Condition</th>
+            <th>Shielding</th>
+            <th>Label</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><select id="type">
+                <option value="Stove">S - Stove</option>
+                <option value="Kitchen Wood Range">R - Kitchen wood range</option>
+                <option value="Insert">I - Insert</option>
+                <option value="Furnace">F - Furnace</option>
+                <option value="Boiler">B - Boiler</option>
+                <option value="Factory Built Fireplace">A - Factory built fireplace</option>
+                <option value="Pellet Stove/Insert">P - Pellet stove/insert</option>
+                <option value="Hearth">H - Hearth mount</option>
+                <option value="Outdoor Wood Boiler">OB - Outdoor wood boiler</option>
+                <option value="Masonry Fireplace">FP - Masonry fireplace</option>
+            </td>
+            <td><input type="text" name="make"></td>
+            <td><input type="text" name="model"></td>
+            <td><input type="text" name="installed_by"></td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <select name="chimney_major" id="chimney_major">
+                  <option value="">Select</option>
+                  <option value="1">1 — Brick shell clay lined</option>
+                  <option value="2">2 — Brick shell unlined</option>
+                  <option value="3">3 — Bracket type</option>
+                  <option value="4">4 — Brick shell S.S. liner</option>
+                  <option value="5">5 — Metal not approved for wood</option>
+                  <option value="6">6 — ULC Metal approved for wood</option>
+                  <option value="7">7 — Pellet vent pipe</option>
+                  <option value="8">8 — Side vent</option>
+                </select>
+                <select name="chimney_minor" id="chimney_minor">
+                  <option value="1">1 - Inside</option>
+                  <option value="2">2 - Outside</option>
+                </select>
+              </div>
+            </td>
+            <td><select id="own_shared" name="own_shared">
+                <option value="own">Own</option>
+                <option value="shared">Shared</option>
+            </td>
+            <td><select id="chimney_condition" name="chimney_condition">
+                <option value="1 - Very Good">1 - Very good</option>
+                <option value="2 - Good">2 - Good</option>
+                <option value="3 - Average">3 - Average</option>
+                <option value="4 - Poor">4 - Poor</option>
+                <option value="5 - Very Poor">5 - Very poor</option>
+                <option value="6 - Notify Underwriting">6 - Notify Underwriting</option>
+          </td>
+          <td><select name="shielding" id="shielding">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+          </td>
+          <td><select name="label" id="label">
+            <option value="CSA B366">CSA B366</option>
+            <option value="ULC S610">ULC S610</option>
+            <option value="ULC S627">ULC S627</option>
+            <option value="ULC S628">ULC S628</option>
+            <option value="Other">Other</option>
+            <option value="Not Labelled">Not labelled</option>
+          </select>
+          </td>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+        <h2>Measurements & Clearances</h2>
+      <table id="clearancesTable">
+        <thead>
+          <tr>
+            <th>Clearances from</th>
+            <th>Required</th>
+            <th>Actual</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Top of heating unit</td>
+            <td><input type="text" name="clear_top_required"></td>
+            <td><input type="text" name="clear_top_actual"></td>
+          </tr>
+          <tr>
+            <td>Rear of heating unit</td>
+            <td><input type="text" name="clear_rear_required"></td>
+            <td><input type="text" name="clear_rear_actual"></td>
+          </tr>
+          <tr>
+            <td>Left side</td>
+            <td><input type="text" name="clear_left_required"></td>
+            <td><input type="text" name="clear_left_actual"></td>
+          </tr>
+          <tr>
+            <td>Right side</td>
+            <td><input type="text" name="clear_right_required"></td>
+            <td><input type="text" name="clear_right_actual"></td>
+          </tr>
+          <tr>
+            <td>Front</td>
+            <td><input type="text" name="clear_front_required"></td>
+            <td><input type="text" name="clear_front_actual"></td>
+          </tr>
+          <tr>
+            <td>Flue pipe back</td>
+            <td><input type="text" name="flue_pipe_back_required"></td>
+            <td><input type="text" name="flue_pipe_back_actual"></td>
+          </tr>
+          <tr>
+            <td>Flue pipe side</td>
+            <td><input type="text" name="flue_pipe_side_required"></td>
+            <td><input type="text" name="flue_pipe_side_actual"></td>
+          </tr>
+          <tr>
+            <td>Flue pipe ceiling</td>
+            <td><input type="text" name="flue_pipe_ceiling_required"></td>
+            <td><input type="text" name="flue_pipe_ceiling_actual"></td>
+          </tr>
+          <tr>
+            <td>Left corner</td>
+            <td><input type="text" name="left_corner_required"></td>
+            <td><input type="text" name="left_corner_actual"></td>
+          </tr>
+          <tr>
+            <td>Right corner</td>
+            <td><input type="text" name="right_corner_required"></td>
+            <td><input type="text" name="right_corner_actual"></td>
+          </tr>
+          <tr>
+            <td>Plenum</td>
+            <td><input type="text" name="plenum_required"></td>
+            <td><input type="text" name="plenum_actual"></td>
+          </tr>
+          <tr>
+            <td>Mantel</td>
+            <td><input type="text" name="mantel_required"></td>
+            <td><input type="text" name="mantel_actual"></td>
+          </tr>
+          <tr>
+            <td class="floor-pad" colspan="3">Floor Pad</td>
+          </tr>
+          <tr>
+            <td>Fuel loading door</td>
+            <td><input type="text" name="fuel_loading_door_required"></td>
+            <td><input type="text" name="fuel_loading_door_actual"></td>
+          </tr>
+          <tr>
+            <td>Left</td>
+            <td><input type="text" name="left_required"></td>
+            <td><input type="text" name="left_actual"></td>
+          </tr>
+          <tr>
+            <td>Right</td>
+            <td><input type="text" name="right_required"></td>
+            <td><input type="text" name="right_actual"></td>
+          </tr>
+          <tr>
+            <td>Rear</td>
+            <td><input type="text" name="rear_required"></td>
+            <td><input type="text" name="rear_actual"></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Notes</h2>
+      <textarea name="remarks" rows="5"></textarea>
+    </section>
+
+    <div class="actions">
+      <button type="submit">Save / Export</button>
+      <button type="button" id="resetBtn">Reset</button>
+    </div>
+
+  </form>
+
+  <!-- jsPDF for client-side PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
