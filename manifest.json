@@ -2,11 +2,13 @@
   "name": "Wood App Form",
   "short_name": "WoodApp",
   "description": "Wood appliance inspection form — generate PDF and save/share.",
-  "start_url": ".",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0b66c3",
   "icons": [
-    { "src": "woodicon.png", "sizes": "192x192 512x512", "type": "image/png" }
+    { "src": "./woodicon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./woodicon.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
