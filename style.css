@@ -121,4 +121,18 @@ body.dark-mode .row-positive { background: #143a1e !important; color: #dff6df !i
 body.dark-mode .row-negative { background: #3b1515 !important; color: #ffd6d1 !important; }
 body.dark-mode .row-caution { background: #3b3316 !important; color: #fff3cf !important; }
 
+/* Combobox (input + dropdown) for Manufacturer field */
+.combo-wrapper { position: relative; display: inline-flex; align-items: stretch; width: 100%; }
+.combo-wrapper .combo-toggle { background: #eef3fb; border: 1px solid #c8d8f0; padding: 0 8px; cursor: pointer; margin-left: 6px; border-radius: 3px; }
+.combo-wrapper .combo-toggle:focus { outline: 2px solid #9cc0ff; }
+.combo-wrapper input[type="text"] { flex: 1 1 auto; z-index: 2; position: relative; }
+.combo-list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 9999; background: white; border: 1px solid #c8d8f0; max-height: 220px; overflow: auto; box-shadow: 0 6px 18px rgba(29,41,66,0.12); display: none; list-style: none; padding: 4px 0; }
+.combo-wrapper.open .combo-list { display: block; }
+.combo-list .combo-item { padding: 6px 10px; cursor: pointer; }
+.combo-list .combo-item:hover, .combo-list .combo-item.active { background: #e9f2ff; }
+
+/* dark mode combobox */
+body.dark-mode .combo-list { background: #0b2236; border-color: #234354; color: #e6eef6; }
+body.dark-mode .combo-list .combo-item:hover, body.dark-mode .combo-list .combo-item.active { background: #07324b; }
+
 

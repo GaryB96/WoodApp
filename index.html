@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b66c3">
   <title>Wood App Form</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -43,7 +44,7 @@
         <thead>
           <tr>
             <th>Type</th>
-            <th>Make</th>
+            <th>Manufacturer</th>
             <th>Model</th>
             <th>Installed By</th>
             <th>Chimney Code</th>
@@ -68,7 +69,8 @@
                 <option value="Outdoor Wood Boiler">OB - Outdoor wood boiler</option>
                 <option value="Masonry Fireplace">FP - Masonry fireplace</option>
             </td>
-            <td data-label="Make"><input type="text" name="make"></td>
+              <td data-label="Manufacturer"><input type="text" name="make" autocomplete="off"></td>
+            </td>
             <td data-label="Model"><input type="text" name="model"></td>
             <td data-label="Installed By"><input type="text" name="installed_by"></td>
             <td data-label="Chimney Code">
@@ -225,7 +227,6 @@
     </section>
 
     <div class="actions">
-      <button type="submit">Save / Export</button>
       <button type="button" id="shareBtn">Share / Save</button>
       <button type="button" id="saveOneDriveBtn">Save to OneDrive</button>
       <button type="button" id="resetBtn">Reset</button>
@@ -249,6 +250,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <!-- MSAL for Microsoft Graph authentication (OneDrive uploads) -->
   <script src="https://alcdn.msauth.net/browser/2.42.0/js/msal-browser.min.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <!-- Apple touch icon (optional) -->
+  <link rel="apple-touch-icon" href="woodicon.png">
   <script src="script.js"></script>
 </body>
 </html>

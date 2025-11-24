@@ -13,6 +13,237 @@ document.addEventListener('DOMContentLoaded', function () {
 		surveyInput.value = today;
 	}
 
+
+	// --- Manufacturers loader and helpers ---
+	let manufacturersList = [];
+
+	async function loadManufacturers() {
+		// Prefer fetching the external `stovemanufacturers.json` when available (served over HTTP).
+		// Fall back to inline JSON only if the fetch fails (useful for file:// testing).
+		try {
+			const resp = await fetch('stovemanufacturers.json');
+			if (resp && resp.ok) {
+				const json = await resp.json();
+				manufacturersList = Array.isArray(json) ? json : [];
+				populateAllMakeControls();
+				return manufacturersList;
+			}
+		} catch (e) {
+			// fetch failed (possibly file:// or network); try inline next
+			console.debug('stovemanufacturers.json fetch failed, will try inline data if present', e && e.message);
+		}
+
+		// fallback to inline JSON (works with file:// and no server)
+		try {
+			const inline = document.getElementById('manufacturers-data');
+			if (inline) {
+				const json = JSON.parse(inline.textContent || inline.innerText || '[]');
+				manufacturersList = Array.isArray(json) ? json : [];
+				populateAllMakeControls();
+				return manufacturersList;
+			}
+		} catch (e) {
+			console.debug('Failed to parse inline manufacturers-data', e && e.message);
+		}
+
+		// final fallback: empty list
+		manufacturersList = [];
+		populateAllMakeControls();
+		return manufacturersList;
+	}
+
+	function populateAllMakeControls() {
+		// For every row in the materials table, populate its make control according to its type
+		if (!materialsTable) return;
+		Array.from(materialsTable.querySelectorAll('tr')).forEach(row => {
+			populateMakeForRow(row);
+		});
+	}
+
+	// load manufacturers in background
+	loadManufacturers();
+
+	function slugifyType(v) {
+		if (!v) return '';
+		return v.toString().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+	}
+
+	async function loadManufacturersForType(typeValue) {
+		const key = slugifyType(typeValue || '');
+		// try inline per-type JSON
+		try {
+			if (key) {
+				const inline = document.getElementById('manufacturers-data-' + key);
+				if (inline) {
+					const json = JSON.parse(inline.textContent || inline.innerText || '[]');
+					return Array.isArray(json) ? json : [];
+				}
+			}
+		} catch (e) {}
+
+		// try external per-type file
+		if (key) {
+			try {
+				const resp = await fetch(`manufacturers-${key}.json`);
+				if (resp && resp.ok) {
+					const json = await resp.json();
+					return Array.isArray(json) ? json : [];
+				}
+			} catch (e) {}
+		}
+
+		// fallback to global list (inline or fetched)
+		if (manufacturersList && manufacturersList.length) return manufacturersList;
+		// attempt to load the global list synchronously if not already loaded
+		await loadManufacturers();
+		return manufacturersList;
+	}
+
+	// populate the Make select for a specific table row based on its Type
+	async function populateMakeForRow(row) {
+		if (!row) return;
+		const typeSel = row.querySelector('select[name="type"]') || row.querySelector('#type');
+		let makeEl = row.querySelector('select[name="make"]') || row.querySelector('input[name="make"]');
+		if (!makeEl) return;
+		// prefer the actual option value; avoid falling back to option text to prevent unexpected fetches
+		const typeVal = typeSel ? (typeSel.value || '') : '';
+		const list = await loadManufacturersForType(typeVal);
+		if (makeEl.tagName.toLowerCase() === 'select') {
+			// populate select
+			makeEl.innerHTML = '';
+			const placeholder = document.createElement('option');
+			placeholder.value = '';
+			placeholder.textContent = 'Select';
+			makeEl.appendChild(placeholder);
+			list.forEach(m => {
+				const opt = document.createElement('option');
+				opt.value = m;
+				opt.textContent = m;
+				makeEl.appendChild(opt);
+			});
+		} else {
+			// populate input with a combobox-style dropdown so users can type or pick
+			const input = makeEl;
+			// remove any existing native datalist to avoid conflicts
+			if (input.getAttribute('list')) input.removeAttribute('list');
+
+			// ensure we have a wrapper for the combo control
+			let wrapper = input.closest('.combo-wrapper');
+			if (!wrapper) {
+				wrapper = document.createElement('div');
+				wrapper.className = 'combo-wrapper';
+				input.parentNode.insertBefore(wrapper, input);
+				wrapper.appendChild(input);
+				// toggle button to show all
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'combo-toggle';
+				btn.setAttribute('aria-label', 'Show manufacturers');
+				btn.textContent = '▾';
+				wrapper.appendChild(btn);
+				// list element
+				const listEl = document.createElement('ul');
+				listEl.className = 'combo-list';
+				wrapper.appendChild(listEl);
+
+				// event wiring
+				let currentItems = [];
+				function renderList(filter) {
+					const ll = listEl;
+					ll.innerHTML = '';
+					const f = (filter || '').toString().toLowerCase();
+					const filtered = currentItems.filter(i => i.toString().toLowerCase().includes(f));
+					filtered.slice(0,200).forEach((item, idx) => {
+						const li = document.createElement('li');
+						li.className = 'combo-item';
+						li.textContent = item;
+						li.tabIndex = -1;
+						li.dataset.index = idx;
+						li.addEventListener('click', function () {
+							input.value = item;
+							input.dispatchEvent(new Event('input', { bubbles: true }));
+							closeList();
+						});
+						ll.appendChild(li);
+					});
+					// if no results, show a disabled item
+					if (!filtered.length) {
+						const li = document.createElement('li');
+						li.className = 'combo-item';
+						li.textContent = 'No matches';
+						li.style.opacity = '0.6';
+						ll.appendChild(li);
+					}
+					// reset active index
+					wrapper._activeIndex = -1;
+				}
+
+				function openList() { wrapper.classList.add('open'); }
+				function closeList() { wrapper.classList.remove('open'); wrapper._activeIndex = -1; updateActive(); }
+				function toggleList() { if (wrapper.classList.contains('open')) closeList(); else { renderList(input.value || ''); openList(); } }
+
+				function updateActive() {
+					const items = Array.from(listEl.querySelectorAll('.combo-item'));
+					items.forEach((it,i) => it.classList.toggle('active', i === (wrapper._activeIndex || -1)));
+					if (wrapper._activeIndex >= 0 && items[wrapper._activeIndex]) {
+						const el = items[wrapper._activeIndex];
+						// ensure visible
+						const rect = el.getBoundingClientRect();
+						const parentRect = listEl.getBoundingClientRect();
+						if (rect.top < parentRect.top) el.scrollIntoView(true);
+						else if (rect.bottom > parentRect.bottom) el.scrollIntoView(false);
+					}
+				}
+
+				// keyboard nav
+				input.addEventListener('keydown', function (ev) {
+					const items = Array.from(listEl.querySelectorAll('.combo-item'));
+					if (ev.key === 'ArrowDown') {
+						ev.preventDefault();
+						if (!wrapper.classList.contains('open')) { renderList(input.value || ''); openList(); }
+						wrapper._activeIndex = Math.min((wrapper._activeIndex || -1) + 1, items.length - 1);
+						updateActive();
+					} else if (ev.key === 'ArrowUp') {
+						ev.preventDefault();
+						wrapper._activeIndex = Math.max((wrapper._activeIndex || -1) - 1, 0);
+						updateActive();
+					} else if (ev.key === 'Enter') {
+						if (wrapper.classList.contains('open') && (wrapper._activeIndex || -1) >= 0) {
+							ev.preventDefault();
+							const sel = items[wrapper._activeIndex];
+							if (sel) {
+								input.value = sel.textContent;
+								input.dispatchEvent(new Event('input', { bubbles: true }));
+							}
+							closeList();
+						}
+					} else if (ev.key === 'Escape') {
+						if (wrapper.classList.contains('open')) { ev.preventDefault(); closeList(); }
+					}
+				});
+
+				input.addEventListener('input', function () { renderList(input.value || ''); if (!wrapper.classList.contains('open')) openList(); });
+				btn.addEventListener('click', function (e) { e.preventDefault(); toggleList(); });
+
+				// close on outside click
+				document.addEventListener('click', function (ev) {
+					if (!wrapper.contains(ev.target)) closeList();
+				});
+
+				// store a method to update the available items from outside
+				wrapper._setItems = function (items) { currentItems = Array.isArray(items) ? items : []; renderList(input.value || ''); };
+			}
+
+			// populate the wrapper's list using the manufacturers list
+			try {
+				if (wrapper && wrapper._setItems) wrapper._setItems(list || []);
+			} catch (e) {
+				// graceful fallback: if anything fails, leave input as-is
+				console.debug('Failed to initialize combobox for manufacturer', e && e.message);
+			}
+		}
+	}
+
 	// Persist completed_by selection
 	const completedBySelect = document.querySelector('select[name="completed_by"]');
 	try {
@@ -109,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			const tr = document.createElement('tr');
 			tr.innerHTML = `
 				<td data-label="Type"><input type="text" name="type"></td>
-				<td data-label="Make"><input type="text" name="make"></td>
+				<td data-label="Make"><select name="make"><option value="">Select</option></select></td>
 				<td data-label="Model"><input type="text" name="model"></td>
 				<td data-label="Installed By"><input type="text" name="installed_by"></td>
 				<td data-label="Chimney Code"><input type="text" name="chimney_code"></td>
@@ -118,6 +349,18 @@ document.addEventListener('DOMContentLoaded', function () {
 				<td data-label="Actions"><button type="button" class="remove-row">×</button></td>
 			`;
 			materialsTable.appendChild(tr);
+			// if there is a template type select in the DOM (the first row), clone its options into the new row
+			const templateType = document.querySelector('#type');
+			const typeInput = tr.querySelector('input[name="type"]');
+			if (templateType && typeInput) {
+				const newSel = document.createElement('select');
+				newSel.name = 'type';
+				newSel.innerHTML = templateType.innerHTML;
+				typeInput.replaceWith(newSel);
+			}
+
+			// populate Make for this new row according to its Type (will use defaults if blank)
+			populateMakeForRow(tr);
 		});
 
 		materialsTable.addEventListener('click', function (e) {
@@ -126,6 +369,18 @@ document.addEventListener('DOMContentLoaded', function () {
 				if (row) row.remove();
 			}
 		});
+
+		// when a Type select changes in the materials table, populate its Make select
+		materialsTable.addEventListener('change', function (e) {
+			const target = e.target;
+			if (target && target.matches && target.matches('select[name="type"], select#type')) {
+				const row = target.closest('tr');
+				if (row) populateMakeForRow(row);
+			}
+		});
+
+		// populate existing rows' Make selects based on their Type
+		Array.from(materialsTable.querySelectorAll('tbody tr')).forEach(r => populateMakeForRow(r));
 	}
 
 	// collect rows generically (works for selects + inputs)
@@ -793,6 +1048,17 @@ document.addEventListener('DOMContentLoaded', function () {
 				console.error('PDF generation / save failed', err);
 				alert('Unable to save PDF: ' + (err && err.message ? err.message : err));
 			}
+		});
+	}
+
+	// Register service worker for PWA (if supported)
+	if ('serviceWorker' in navigator) {
+		window.addEventListener('load', function () {
+			navigator.serviceWorker.register('sw.js').then(reg => {
+				console.log('ServiceWorker registered:', reg.scope);
+			}).catch(err => {
+				console.warn('ServiceWorker registration failed:', err);
+			});
 		});
 	}
 
