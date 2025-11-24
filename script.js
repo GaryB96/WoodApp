@@ -232,6 +232,294 @@ document.addEventListener('DOMContentLoaded', function () {
 		setTimeout(() => URL.revokeObjectURL(url), 5000);
 	}
 
+	// --- OneDrive / MSAL integration ---
+	// Set your Azure app (Single-page application) client ID here.
+	// To enable saving directly to OneDrive you must register an app in Azure
+	// Portal and grant the Files.ReadWrite delegated permission. Leave blank
+	// to disable the button.
+	const ONEDRIVE_CLIENT_ID = ""; // <-- set your client id here
+
+	// generatePdfBlob: create the PDF and return the blob + suggested filename
+	async function generatePdfBlob(data) {
+		const { jsPDF } = window.jspdf || {};
+		if (!jsPDF) throw new Error('jsPDF library not loaded');
+		const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+		const margin = 40;
+		const pageWidth = doc.internal.pageSize.getWidth();
+		let cursorY = margin;
+
+		// (copy of the PDF generation logic from createAndSavePdf)
+		doc.setFillColor(246, 250, 255);
+		doc.rect(0, 0, pageWidth, 64, 'F');
+		doc.setFontSize(18);
+		doc.setFont('helvetica', 'bold');
+		doc.setTextColor(22, 55, 92);
+		doc.text('WOOD APP FORM', pageWidth / 2, cursorY, { align: 'center' });
+		doc.setTextColor(0, 0, 0);
+		cursorY += 26;
+
+		const policy = data.policy || '';
+		const surveyDate = data.survey_date || '';
+		const completedBy = data.completed_by || '';
+
+		doc.setFontSize(10);
+		doc.setFont('helvetica', 'normal');
+		doc.autoTable({
+			startY: cursorY,
+			head: [['Policy #', 'Survey date', 'Completed by']],
+			body: [[policy, surveyDate, completedBy]],
+			theme: 'grid',
+			styles: { fontSize: 10 },
+			headStyles: { fillColor: [225, 235, 245], textColor: 22, halign: 'center' },
+			columnStyles: { 0: { cellWidth: 120 }, 1: { cellWidth: 120 }, 2: { cellWidth: 120 } }
+		});
+		cursorY = doc.lastAutoTable.finalY + 12;
+
+		let chimneyLegend = [];
+		if (Array.isArray(data.appliances) && data.appliances.length) {
+			const appHead = ['Type', 'Make', 'Model', 'Installed By', 'Chimney Code', 'Own/Shared', 'Chimney Condition', 'Shielding', 'Label'];
+			const appBody = data.appliances.map((app, idx) => {
+				const maj = app.chimney_major || app['chimney_major'] || '';
+				const min = app.chimney_minor || app['chimney_minor'] || '';
+				let chimneyCode = app.chimney_code || app['chimney_code'] || '';
+				if ((!chimneyCode || chimneyCode === '') && maj) {
+					chimneyCode = min ? `${maj}.${min}` : `${maj}`;
+				}
+				let chimneyFullWords = '';
+				try {
+					if (materialsTable) {
+						const rows = Array.from(materialsTable.querySelectorAll('tr'));
+						const row = rows[idx];
+						if (row) {
+							const majSel = row.querySelector('select[name="chimney_major"]');
+							const minSel = row.querySelector('select[name="chimney_minor"]');
+							const majText = majSel && majSel.selectedOptions && majSel.selectedOptions[0] ? majSel.selectedOptions[0].text : '';
+							const minText = minSel && minSel.selectedOptions && minSel.selectedOptions[0] ? minSel.selectedOptions[0].text : '';
+							if (majText || minText) {
+								const cleanMaj = majText ? majText.replace(/^\s*\d+\s*[—-]?\s*/,'').trim() : '';
+								const cleanMin = minText ? minText.replace(/^\s*\d+\s*[\-]?\s*/,'').trim() : '';
+								chimneyFullWords = [cleanMaj, cleanMin].filter(Boolean).join(' / ');
+							}
+						}
+					}
+				} catch (e) {}
+				if (chimneyCode) chimneyLegend.push({ code: chimneyCode, words: chimneyFullWords });
+				return [
+					app.type || app['type'] || (app['col0'] || ''),
+					app.make || '',
+					app.model || '',
+					app.installed_by || app['installed_by'] || '',
+					chimneyCode,
+					app.own_shared || app['own_shared'] || '',
+					app.chimney_condition || app['chimney_condition'] || '',
+					(app.shielding === true || app.shielding === 'yes' || app.shielding === 'Yes') ? 'Yes' : (app.shielding === 'no' || app.shielding === false ? 'No' : (app.shielding || '')),
+					app.label || ''
+				];
+			});
+
+			doc.setFontSize(12);
+			doc.setFont('helvetica', 'bold');
+			doc.text('Appliance Details', margin, cursorY);
+			cursorY += 8;
+
+			doc.autoTable({
+				startY: cursorY,
+				head: [appHead],
+				body: appBody,
+				styles: { fontSize: 9 },
+				headStyles: { fillColor: [235, 245, 255], textColor: 22 },
+				theme: 'striped',
+				columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 70 }, 2: { cellWidth: 70 }, 3: { cellWidth: 70 } }
+			});
+			cursorY = doc.lastAutoTable.finalY + 12;
+		}
+
+		// clearances and notes: reuse same logic as existing flow
+		if (clearancesTable) {
+			const hasShielded = Array.from(clearancesTable.querySelectorAll('thead th')).some(th => th.textContent.trim() === 'Shielded');
+			const head = hasShielded ? ['Clearances from', 'Required', 'Actual', 'Shielded'] : ['Clearances from', 'Required', 'Actual'];
+			const rows = Array.from(clearancesTable.querySelectorAll('tbody tr'));
+			const body = rows.map(r => {
+				const first = r.querySelector('td');
+				if (!first) return null;
+				const colspan = first.getAttribute('colspan');
+				const label = first.textContent.trim();
+				if (colspan && parseInt(colspan) > 1) return { label: label, required: '', actual: '', shielded: '', _isHeader: true };
+				const cells = r.querySelectorAll('td');
+				const reqInput = cells[1] ? cells[1].querySelector('input, select, textarea') : null;
+				const actInput = cells[2] ? cells[2].querySelector('input, select, textarea') : null;
+				const req = reqInput ? (reqInput.value || '') : (cells[1] ? cells[1].textContent.trim() : '');
+				const act = actInput ? (actInput.value || '') : (cells[2] ? cells[2].textContent.trim() : '');
+				let shieldVal = '';
+				if (hasShielded) {
+					const shieldCell = cells[3];
+					if (shieldCell) {
+						const chk = shieldCell.querySelector('input[type="checkbox"]');
+						shieldVal = chk ? (chk.checked ? 'Yes' : 'No') : shieldCell.textContent.trim();
+					}
+				}
+				return { label, required: req, actual: act, shielded: shieldVal, _isHeader: false };
+			}).filter(Boolean);
+
+			if (body.length) {
+				doc.setFontSize(12);
+				doc.setFont('helvetica', 'bold');
+				doc.text('Measurements & Clearances', margin, cursorY);
+				cursorY += 8;
+				const atBody = body.map(b => hasShielded ? [b.label, b.required, b.actual, b.shielded] : [b.label, b.required, b.actual]);
+				doc.autoTable({
+					startY: cursorY,
+					head: [head],
+					body: atBody,
+					styles: { fontSize: 9 },
+					headStyles: { fillColor: [240, 240, 240], textColor: 22 },
+					theme: 'grid',
+					didParseCell: function (dataCell) {
+						const raw = dataCell.row && dataCell.row.raw;
+						if (!raw) return;
+						const isHeader = raw[1] === '' && raw[2] === '' && (hasShielded ? raw[3] === '' : true);
+						if (isHeader) {
+							if (dataCell.column.index === 0) {
+								dataCell.cell.colSpan = hasShielded ? 4 : 3;
+								dataCell.cell.styles.fillColor = [235, 245, 255];
+								dataCell.cell.styles.textColor = 22;
+								dataCell.cell.styles.halign = 'left';
+							} else {
+								dataCell.cell.text = '';
+							}
+						}
+					}
+				});
+				cursorY = doc.lastAutoTable.finalY + 12;
+			}
+		}
+
+		// Notes
+		doc.setFontSize(12);
+		doc.setFont('helvetica', 'bold');
+		doc.text('Notes', margin, cursorY);
+		cursorY += 12;
+		doc.setFont('helvetica', 'normal');
+		doc.setFontSize(10);
+		const notesText = (data.remarks || '').trim();
+		const notesLines = notesText ? doc.splitTextToSize(notesText, pageWidth - margin * 2) : [];
+		if (notesLines.length) {
+			doc.text(notesLines, margin, cursorY);
+			cursorY += notesLines.length * 12 + 8;
+		}
+
+		if (Array.isArray(chimneyLegend) && chimneyLegend.length) {
+			const uniq = {};
+			chimneyLegend.forEach(item => { if (!item || !item.code) return; if (!uniq[item.code]) uniq[item.code] = item.words || ''; else if (!uniq[item.code] && item.words) uniq[item.code] = item.words; });
+			const legendLines = [];
+			for (const code of Object.keys(uniq)) {
+				const words = uniq[code];
+				if (words) legendLines.push(`${code} — ${words}`);
+				else legendLines.push(`${code}`);
+			}
+			if (legendLines.length) {
+				doc.setFont('helvetica', 'bold');
+				doc.text('Chimney Code Legend', margin, cursorY);
+				cursorY += 12;
+				doc.setFont('helvetica', 'normal');
+				const wrapped = doc.splitTextToSize(legendLines.join('\n'), pageWidth - margin * 2);
+				doc.text(wrapped, margin, cursorY);
+				cursorY += wrapped.length * 12 + 8;
+			}
+		}
+
+		const blob = doc.output('blob');
+		const safePolicy = sanitizeFilename(policy || 'policy');
+		const safeDate = sanitizeFilename(surveyDate || (new Date()).toISOString().slice(0,10));
+		const suggestedName = `${safePolicy} - ${safeDate} - Wood app form.pdf`;
+		return { blob, suggestedName };
+	}
+
+	// modify createAndSavePdf to use the generator and then offer the picker
+	async function createAndSavePdf(data) {
+		const res = await generatePdfBlob(data);
+		await saveBlobWithPicker(res.blob, res.suggestedName);
+		return res;
+	}
+
+	// MSAL + Graph upload helper (small-file PUT)
+	async function ensureMsalAvailable() {
+		if (!ONEDRIVE_CLIENT_ID) return null;
+		if (!window.msal || !window.msal.PublicClientApplication) throw new Error('MSAL not loaded');
+		const msalConfig = { auth: { clientId: ONEDRIVE_CLIENT_ID, redirectUri: window.location.origin } };
+		const msalInstance = new msal.PublicClientApplication(msalConfig);
+		return msalInstance;
+	}
+
+	async function getAccessToken(msalInstance) {
+		const scopes = ["Files.ReadWrite"];
+		try {
+			const accounts = msalInstance.getAllAccounts();
+			if (accounts && accounts.length) {
+				const silentReq = { account: accounts[0], scopes };
+				const silent = await msalInstance.acquireTokenSilent(silentReq);
+				return silent.accessToken;
+			}
+		} catch (e) {
+			// fallback to interactive
+		}
+		// interactive login
+		const loginResp = await msalInstance.loginPopup({ scopes });
+		const tokenResp = await msalInstance.acquireTokenSilent({ account: loginResp.account, scopes }).catch(async () => {
+			return await msalInstance.acquireTokenPopup({ scopes });
+		});
+		return tokenResp.accessToken;
+	}
+
+	async function uploadToOneDrive(blob, filename) {
+		if (!ONEDRIVE_CLIENT_ID) throw new Error('ONEDRIVE_CLIENT_ID not configured');
+		const msalInstance = await ensureMsalAvailable();
+		if (!msalInstance) throw new Error('MSAL not available');
+		const token = await getAccessToken(msalInstance);
+		// small-file PUT to root
+		const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(filename)}:/content`;
+		const resp = await fetch(url, {
+			method: 'PUT',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/pdf'
+			},
+			body: blob
+		});
+		if (!resp.ok) {
+			const txt = await resp.text().catch(() => '');
+			throw new Error(`Upload failed: ${resp.status} ${resp.statusText} ${txt}`);
+		}
+		return await resp.json();
+	}
+
+	// wire the Save-to-OneDrive button
+	const saveOneDriveBtn = document.getElementById('saveOneDriveBtn');
+	if (saveOneDriveBtn) {
+		if (!ONEDRIVE_CLIENT_ID) {
+			// hide or disable if not configured
+			saveOneDriveBtn.style.display = 'none';
+		} else {
+			saveOneDriveBtn.addEventListener('click', async function () {
+				try {
+					const data = collectFormData();
+					const { blob, suggestedName } = await generatePdfBlob(data);
+					// upload
+					saveOneDriveBtn.disabled = true;
+					saveOneDriveBtn.textContent = 'Uploading...';
+					await uploadToOneDrive(blob, suggestedName);
+					alert('Saved to OneDrive as ' + suggestedName);
+				} catch (err) {
+					console.error('OneDrive upload failed', err);
+					alert('OneDrive upload failed: ' + (err && err.message ? err.message : err));
+				} finally {
+					saveOneDriveBtn.disabled = false;
+					saveOneDriveBtn.textContent = 'Save to OneDrive';
+				}
+			});
+		}
+	}
+
 
 	async function createAndSavePdf(data) {
 			// Use jsPDF (UMD exposes window.jspdf.jsPDF)
