@@ -6,6 +6,101 @@ document.addEventListener('DOMContentLoaded', function () {
 	const materialsTable = materialsTableElem ? materialsTableElem.querySelector('tbody') : null;
 	const resetBtn = document.getElementById('resetBtn');
 
+	// Survey date default to today if empty
+	const surveyInput = document.querySelector('input[name="survey_date"]');
+	if (surveyInput && !surveyInput.value) {
+		const today = new Date().toISOString().slice(0,10);
+		surveyInput.value = today;
+	}
+
+	// Persist completed_by selection
+	const completedBySelect = document.querySelector('select[name="completed_by"]');
+	try {
+		if (completedBySelect) {
+			const saved = localStorage.getItem('woodapp_completed_by');
+			if (saved) completedBySelect.value = saved;
+			completedBySelect.addEventListener('change', function () { localStorage.setItem('woodapp_completed_by', completedBySelect.value); });
+		}
+	} catch (e) { /* ignore storage errors */ }
+
+	// Theme toggle (dark/light)
+	const themeToggle = document.getElementById('themeToggle');
+	(function initTheme() {
+		try {
+			const t = localStorage.getItem('woodapp_theme') || 'light';
+			if (t === 'dark') document.body.classList.add('dark-mode');
+		} catch (e) {}
+	})();
+	if (themeToggle) {
+		themeToggle.addEventListener('click', function () {
+			document.body.classList.toggle('dark-mode');
+			try { localStorage.setItem('woodapp_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); } catch (e) {}
+		});
+	}
+
+	// Clearance row evaluation: color rows based on required vs actual values and shielding
+	function parseNumberForComparison(val) {
+		if (val === null || val === undefined) return NaN;
+		if (typeof val === 'number') return val;
+		const s = String(val).trim();
+		if (s === '') return NaN;
+		// strip non-numeric except dot and minus
+		const cleaned = s.replace(/[^0-9\.\-]/g, '');
+		const n = parseFloat(cleaned);
+		return Number.isFinite(n) ? n : NaN;
+	}
+
+	function evaluateClearanceRow(row) {
+		if (!row) return;
+		// ignore header rows (colspan)
+		const first = row.querySelector('td');
+		if (!first) return;
+		if (first.getAttribute('colspan')) {
+			row.classList.remove('row-positive','row-negative','row-caution');
+			return;
+		}
+		const cells = row.querySelectorAll('td');
+		const reqInput = cells[1] ? cells[1].querySelector('input, select, textarea') : null;
+		const actInput = cells[2] ? cells[2].querySelector('input, select, textarea') : null;
+		const reqVal = reqInput ? reqInput.value : (cells[1] ? cells[1].textContent.trim() : '');
+		const actVal = actInput ? actInput.value : (cells[2] ? cells[2].textContent.trim() : '');
+		const reqNum = parseNumberForComparison(reqVal);
+		const actNum = parseNumberForComparison(actVal);
+		// find shielded checkbox if present
+		let shielded = false;
+		if (cells.length >= 4) {
+			const shieldCell = cells[3];
+			if (shieldCell) {
+				const chk = shieldCell.querySelector('input[type="checkbox"]');
+				if (chk) shielded = !!chk.checked;
+			}
+		}
+		row.classList.remove('row-positive','row-negative','row-caution');
+		if (!Number.isNaN(reqNum) && !Number.isNaN(actNum)) {
+			if (actNum >= reqNum) {
+				row.classList.add('row-positive');
+			} else {
+				if (shielded) row.classList.add('row-caution');
+				else row.classList.add('row-negative');
+			}
+		}
+	}
+
+	// Attach listener to clearancesTable for input/change events (delegation)
+	const clearancesTable = document.getElementById('clearancesTable');
+	if (clearancesTable) {
+		clearancesTable.addEventListener('input', function (e) {
+			const row = e.target.closest('tr');
+			if (row) evaluateClearanceRow(row);
+		});
+		clearancesTable.addEventListener('change', function (e) {
+			const row = e.target.closest('tr');
+			if (row) evaluateClearanceRow(row);
+		});
+		// initial evaluation
+		Array.from(clearancesTable.querySelectorAll('tbody tr')).forEach(r => evaluateClearanceRow(r));
+	}
+
 	// we will not create or use a visible result area — PDF save will be offered on submit
 
 	// Only wire add/remove if the buttons/table exist
@@ -401,7 +496,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	// Shielding behaviour: toggle 'Shielded' column in clearances table
 	const shieldingSelect = document.getElementById('shielding');
-	const clearancesTable = document.getElementById('clearancesTable');
 
 	function makeSafeName(name) {
 		return name.replace(/[^a-z0-9_]/gi, '_');
@@ -413,21 +507,22 @@ document.addEventListener('DOMContentLoaded', function () {
 		// if Shielded header already exists, do nothing
 		if (Array.from(theadRow.children).some(th => th.textContent.trim() === 'Shielded')) return;
 
-		// add header
+		// insert header at position 3 (after Actual) to keep a consistent column order
 		const th = document.createElement('th');
 		th.textContent = 'Shielded';
-		theadRow.appendChild(th);
+		const insertIndex = 3; // 0-based
+		if (theadRow.children.length > insertIndex) theadRow.insertBefore(th, theadRow.children[insertIndex]);
+		else theadRow.appendChild(th);
 
-		// add checkbox cell for each tbody row (skip rows that span all columns)
+		// add checkbox cell for each tbody row (adjust colspan rows by increasing colspan)
 		const rows = Array.from(clearancesTable.querySelectorAll('tbody tr'));
 		rows.forEach(row => {
 			const firstCell = row.querySelector('td');
 			if (!firstCell) return;
-			if (firstCell.getAttribute('colspan') && parseInt(firstCell.getAttribute('colspan')) > 1) {
-				// add an empty cell to preserve structure (or skip)
-				const empty = document.createElement('td');
-				empty.innerHTML = '';
-				row.appendChild(empty);
+			const colspan = firstCell.getAttribute('colspan') ? parseInt(firstCell.getAttribute('colspan')) : 1;
+			if (colspan > 1) {
+				// increase colspan to account for new column
+				firstCell.setAttribute('colspan', colspan + 1);
 				return;
 			}
 
@@ -437,7 +532,6 @@ document.addEventListener('DOMContentLoaded', function () {
 			if (ctrl && ctrl.name) {
 				baseName = ctrl.name.replace(/(_required|_actual)$/,'');
 			} else {
-				// fallback to using text content
 				baseName = makeSafeName(firstCell.textContent.trim().toLowerCase());
 			}
 			const shieldName = `shielded_${baseName}`;
@@ -448,34 +542,45 @@ document.addEventListener('DOMContentLoaded', function () {
 			input.name = shieldName;
 			input.className = 'shielded-checkbox';
 			td.appendChild(input);
-			row.appendChild(td);
+			// insert at the correct index in the row
+			if (row.children.length > insertIndex) row.insertBefore(td, row.children[insertIndex]);
+			else row.appendChild(td);
 		});
 	}
 
 	function removeShieldedColumn() {
 		if (!clearancesTable) return;
 		const theadRow = clearancesTable.querySelector('thead tr');
-		// remove Shielded header if present
+		// find Shielded header index
 		const ths = Array.from(theadRow.children);
-		for (let i = ths.length - 1; i >= 0; i--) {
-			if (ths[i].textContent.trim() === 'Shielded') {
-				theadRow.removeChild(ths[i]);
-				break;
-			}
+		let shieldIndex = -1;
+		for (let i = 0; i < ths.length; i++) {
+			if (ths[i].textContent.trim() === 'Shielded') { shieldIndex = i; break; }
 		}
+		if (shieldIndex >= 0) theadRow.removeChild(ths[shieldIndex]);
 
-		// remove last cell from each row if it's a shielded checkbox (or remove empty placeholders)
+		// remove or reduce cells from each tbody row
 		const rows = Array.from(clearancesTable.querySelectorAll('tbody tr'));
 		rows.forEach(row => {
+			const firstCell = row.querySelector('td');
+			if (!firstCell) return;
+			const colspan = firstCell.getAttribute('colspan') ? parseInt(firstCell.getAttribute('colspan')) : 1;
+			if (colspan > 1) {
+				// reduce colspan
+				const newCol = Math.max(1, colspan - 1);
+				firstCell.setAttribute('colspan', newCol);
+				return;
+			}
+			// otherwise remove the td at shieldIndex if present
 			const cells = row.querySelectorAll('td');
-			if (!cells.length) return;
-			const last = cells[cells.length - 1];
-			if (!last) return;
-			// if last cell contains a shielded-checkbox or is empty placeholder, remove it
-			if (last.querySelector && last.querySelector('.shielded-checkbox')) {
-				last.remove();
-			} else if (last.innerHTML.trim() === '') {
-				last.remove();
+			if (shieldIndex >= 0 && cells.length > shieldIndex) {
+				const cell = cells[shieldIndex];
+				if (cell) {
+					// remove if it's the shielded checkbox or empty
+					if (cell.querySelector && (cell.querySelector('.shielded-checkbox') || cell.innerHTML.trim() === '')) {
+						cell.remove();
+					}
+				}
 			}
 		});
 	}
@@ -483,12 +588,12 @@ document.addEventListener('DOMContentLoaded', function () {
 	// watch the shielding select change (it exists in the appliances table row)
 	if (shieldingSelect) {
 		shieldingSelect.addEventListener('change', function (e) {
-			const val = shieldingSelect.value;
+			const val = (shieldingSelect.value || '').toString().toLowerCase();
 			if (val === 'yes') addShieldedColumn();
 			else removeShieldedColumn();
 		});
-		// initialize on load
-		if (shieldingSelect.value === 'yes') addShieldedColumn();
+		// initialize on load (case-insensitive)
+		if ((shieldingSelect.value || '').toString().toLowerCase() === 'yes') addShieldedColumn();
 	}
 
 	// Apply visibility rules based on appliance type
@@ -686,23 +791,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	if (resetBtn) {
 		resetBtn.addEventListener('click', function () {
-			if (form) form.reset();
-			// clear dynamic rows if table exists
-			if (materialsTable) {
-				const rows = Array.from(materialsTable.querySelectorAll('tr'));
-				rows.forEach((r, i) => {
-					// clear inputs in first row, remove others
-					if (i === 0) {
-						Array.from(r.querySelectorAll('input, select, textarea')).forEach(inp => {
-							if (inp.type === 'checkbox') inp.checked = false;
-							else inp.value = '';
-						});
-					} else {
-						r.remove();
-					}
-				});
+			const modal = document.getElementById('resetModal');
+			if (modal) {
+				modal.setAttribute('aria-hidden', 'false');
+			} else {
+				// fallback to immediate reset if modal missing
+				doReset();
 			}
-			// no result area to update; PDF/save flow handles output
 		});
+
+		// modal buttons
+		const resetModal = document.getElementById('resetModal');
+		const confirmReset = document.getElementById('confirmReset');
+		const cancelReset = document.getElementById('cancelReset');
+		function closeModal() { if (resetModal) resetModal.setAttribute('aria-hidden', 'true'); }
+		if (cancelReset) cancelReset.addEventListener('click', function () { closeModal(); });
+		if (confirmReset) confirmReset.addEventListener('click', function () { closeModal(); doReset(); });
+	}
+
+	function doReset() {
+		if (form) form.reset();
+		// reset survey date to today
+		if (surveyInput) surveyInput.value = new Date().toISOString().slice(0,10);
+		// clear dynamic rows if table exists
+		if (materialsTable) {
+			const rows = Array.from(materialsTable.querySelectorAll('tr'));
+			rows.forEach((r, i) => {
+				// clear inputs in first row, remove others
+				if (i === 0) {
+					Array.from(r.querySelectorAll('input, select, textarea')).forEach(inp => {
+						if (inp.type === 'checkbox') inp.checked = false;
+						else inp.value = '';
+					});
+				} else {
+					r.remove();
+				}
+			});
+		}
+		// clear clearance row classes
+		if (clearancesTable) {
+			Array.from(clearancesTable.querySelectorAll('tbody tr')).forEach(r => r.classList.remove('row-positive','row-negative','row-caution'));
+		}
 	}
 });

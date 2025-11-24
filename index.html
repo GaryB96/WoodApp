@@ -20,6 +20,9 @@
 </head>
 <body>
   <h1>Wood App Form</h1>
+  <div style="text-align:center; margin-bottom:8px;">
+    <button id="themeToggle" type="button">Toggle Dark/Light</button>
+  </div>
 
   <form id="woodAppForm">
     <section>
@@ -53,7 +56,8 @@
         <tbody>
           <tr>
             <td data-label="Type"><select id="type">
-                <option value="Stove">S - Stove</option>
+              <option value="">Select</option>
+              <option value="Stove">S - Stove</option>
                 <option value="Kitchen Wood Range">R - Kitchen wood range</option>
                 <option value="Insert">I - Insert</option>
                 <option value="Furnace">F - Furnace</option>
@@ -91,9 +95,9 @@
                 <option value="shared">Shared</option>
             </td>
             <td data-label="Chimney Condition"><select id="chimney_condition" name="chimney_condition">
-                <option value="1 - Very Good">1 - Very good</option>
-                <option value="2 - Good">2 - Good</option>
-                <option value="3 - Average">3 - Average</option>
+              <option value="1 - Very Good">1 - Very good</option>
+              <option value="2 - Good">2 - Good</option>
+              <option value="3 - Average" selected>3 - Average</option>
                 <option value="4 - Poor">4 - Poor</option>
                 <option value="5 - Very Poor">5 - Very poor</option>
                 <option value="6 - Notify Underwriting">6 - Notify Underwriting</option>
@@ -104,6 +108,7 @@
           </select>
           </td>
           <td data-label="Label"><select name="label" id="label">
+            <option value="">Select</option>
             <option value="CSA B366">CSA B366</option>
             <option value="ULC S610">ULC S610</option>
             <option value="ULC S627">ULC S627</option>
@@ -192,22 +197,22 @@
           </tr>
           <tr>
             <td>Fuel loading door</td>
-            <td><input type="text" name="fuel_loading_door_required"></td>
+            <td><input type="text" name="fuel_loading_door_required" value="18"></td>
             <td><input type="text" name="fuel_loading_door_actual"></td>
           </tr>
           <tr>
             <td>Left</td>
-            <td><input type="text" name="left_required"></td>
+            <td><input type="text" name="left_required" value="8"></td>
             <td><input type="text" name="left_actual"></td>
           </tr>
           <tr>
             <td>Right</td>
-            <td><input type="text" name="right_required"></td>
+            <td><input type="text" name="right_required" value="8"></td>
             <td><input type="text" name="right_actual"></td>
           </tr>
           <tr>
             <td>Rear</td>
-            <td><input type="text" name="rear_required"></td>
+            <td><input type="text" name="rear_required" value="8"></td>
             <td><input type="text" name="rear_actual"></td>
           </tr>
         </tbody>
@@ -225,6 +230,17 @@
     </div>
 
   </form>
+
+  <!-- Reset confirmation modal -->
+  <div id="resetModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <p>Are you sure you want to reset the form? This will clear all entered data.</p>
+      <div class="modal-actions">
+        <button id="confirmReset" class="danger">Reset</button>
+        <button id="cancelReset">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <!-- jsPDF for client-side PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

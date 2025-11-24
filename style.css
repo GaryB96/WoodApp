@@ -39,11 +39,13 @@ input[type="text"], input[type="email"], input[type="number"], input[type="date"
 }
 
 /* ensure tables can scroll horizontally on small screens */
-.materials-table, #clearancesTable, table {
-  display: block;
-  width: 100%;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+@media (max-width: 700px) {
+  .materials-table, #clearancesTable {
+    display: block;
+    width: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Actions/buttons layout for small screens */
@@ -71,8 +73,52 @@ td input, td select, td textarea { box-sizing: border-box; max-width: 100%; }
   .materials-table thead { display: none; }
   .materials-table tbody tr { display: block; border: 1px solid #e6eef9; padding: 10px; margin-bottom: 10px; background: #fcfeff; }
   .materials-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; }
-  .materials-table tbody td:before { content: attr(data-label); font-weight: 600; color: #16375c; margin-right: 8px; flex: 0 0 42%; }
+  .materials-table tbody td:before { content: attr(data-label); font-weight: 600; color: #dae8f7; margin-right: 8px; flex: 0 0 42%; }
   .materials-table tbody td > * { flex: 1 1 auto; }
   .materials-table tbody td select, .materials-table tbody td input { width: 100%; }
 }
+
+/* Modal styles */
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; z-index:1000; }
+.modal[aria-hidden="false"] { display:flex; }
+.modal-content { background:#fff; padding:18px; border-radius:6px; max-width:480px; width:90%; box-shadow:0 6px 24px rgba(0,0,0,0.2); }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+.modal .danger { background:#e05353; color:white; border:none; padding:8px 12px; border-radius:4px; }
+.modal button { padding:8px 12px; border-radius:4px; }
+
+/* Row state colors for clearances */
+.row-positive { background: #c1fcc1 !important; }
+.row-negative { background: #fcc6b7 !important; }
+.row-caution { background: #fae5b0 !important; }
+
+/* Dark mode styles */
+body.dark-mode { background:#0f1720; color:#e6eef6; }
+body.dark-mode table { border-color: #233044; }
+body.dark-mode th, body.dark-mode td { border-color:#223241; }
+body.dark-mode thead th { background:#172635; color:#e6eef6; }
+body.dark-mode .materials-table tbody tr { background:#0b1520; }
+body.dark-mode .modal-content { background:#0f1720; color:#e6eef6; border:1px solid #233044; }
+
+/* Dark-mode form controls: slightly darker inputs for comfortable contrast */
+body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
+  background: #0f2230;
+  color: #e6eef6;
+  border: 1px solid #234354;
+}
+body.dark-mode input::placeholder, body.dark-mode textarea::placeholder {
+  color: #a3bf9f;
+}
+
+/* Adjust control appearance in table cells for dark mode */
+body.dark-mode td input, body.dark-mode td select, body.dark-mode td textarea {
+  background: #01406d;
+  color: #fce5e8;
+  border: 1px solid #0282d8;
+}
+
+/* Dark-mode variants for clearance row states (darker so light text remains readable) */
+body.dark-mode .row-positive { background: #143a1e !important; color: #dff6df !important; }
+body.dark-mode .row-negative { background: #3b1515 !important; color: #ffd6d1 !important; }
+body.dark-mode .row-caution { background: #3b3316 !important; color: #fff3cf !important; }
+
 
