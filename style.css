@@ -73,7 +73,7 @@ td input, td select, td textarea { box-sizing: border-box; max-width: 100%; }
   .materials-table thead { display: none; }
   .materials-table tbody tr { display: block; border: 1px solid #e6eef9; padding: 10px; margin-bottom: 10px; background: #fcfeff; }
   .materials-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; }
-  .materials-table tbody td:before { content: attr(data-label); font-weight: 600; color: #dae8f7; margin-right: 8px; flex: 0 0 42%; }
+  .materials-table tbody td:before { content: attr(data-label); font-weight: 600; color: #333; margin-right: 8px; flex: 0 0 42%; }
   .materials-table tbody td > * { flex: 1 1 auto; }
   .materials-table tbody td select, .materials-table tbody td input { width: 100%; }
 }
@@ -135,4 +135,6 @@ body.dark-mode .row-caution { background: #3b3316 !important; color: #fff3cf !im
 body.dark-mode .combo-list { background: #0b2236; border-color: #234354; color: #e6eef6; }
 body.dark-mode .combo-list .combo-item:hover, body.dark-mode .combo-list .combo-item.active { background: #07324b; }
 
-
+.appliance-section label {
+  color: inherit;
+}
