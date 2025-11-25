@@ -12,9 +12,8 @@
 }
 
 body { font-family: Arial, sans-serif; margin: 20px; background: var(--wa-bg); color: var(--wa-text); }
-h1 { text-align: center; color: #ffffff; }
+h1 { text-align: center; color: var(--wa-label); }
 label { display:inline-block; margin-bottom:2px; color: var(--wa-label); font-weight:500; }
-section:first-of-type label { color: #ffffff; }
 section { margin-bottom: 18px; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
 th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
