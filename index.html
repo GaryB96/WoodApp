@@ -41,8 +41,10 @@
         </label>
     </section>
 
-    <section>
-      <h2>Appliance</h2>
+    <div id="appliancesContainer">
+      <div class="appliance-section" data-appliance-num="1">
+        <section>
+          <h2>Appliance</h2>
       <table class="materials-table" id="materialsTable">
         <thead>
           <tr>
@@ -51,15 +53,11 @@
             <th>Model</th>
             <th>Installed By</th>
             <th>Chimney Code</th>
-            <th>Own/Shared</th>
-            <th>Chimney Condition</th>
-            <th>Shielding</th>
-            <th>Label</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td data-label="Type"><select id="type">
+            <td data-label="Type"><select id="type" name="type">
               <option value="">Select</option>
               <option value="Stove">S - Stove</option>
                 <option value="Kitchen Wood Range">R - Kitchen wood range</option>
@@ -71,9 +69,9 @@
                 <option value="Hearth">H - Hearth mount</option>
                 <option value="Outdoor Wood Boiler">OB - Outdoor wood boiler</option>
                 <option value="Masonry Fireplace">FP - Masonry fireplace</option>
+              </select>
             </td>
-              <td data-label="Manufacturer"><input type="text" name="make" autocomplete="off"></td>
-            </td>
+            <td data-label="Manufacturer"><input type="text" name="make" autocomplete="off"></td>
             <td data-label="Model"><input type="text" name="model"></td>
             <td data-label="Installed By"><input type="text" name="installed_by"></td>
             <td data-label="Chimney Code">
@@ -95,9 +93,26 @@
                 </select>
               </div>
             </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <table class="materials-table">
+        <thead>
+          <tr>
+            <th>Own/Shared</th>
+            <th>Chimney Condition</th>
+            <th>Shielding</th>
+            <th>Label</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
             <td data-label="Own/Shared"><select id="own_shared" name="own_shared">
                 <option value="own">Own</option>
                 <option value="shared">Shared</option>
+              </select>
             </td>
             <td data-label="Chimney Condition"><select id="chimney_condition" name="chimney_condition">
               <option value="1 - Very Good">1 - Very good</option>
@@ -106,22 +121,35 @@
                 <option value="4 - Poor">4 - Poor</option>
                 <option value="5 - Very Poor">5 - Very poor</option>
                 <option value="6 - Notify Underwriting">6 - Notify Underwriting</option>
+              </select>
             </td>
-          <td data-label="Shielding"><select name="shielding" id="shielding">
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-          </td>
-          <td data-label="Label"><select name="label" id="label">
-            <option value="">Select</option>
-            <option value="CSA B366">CSA B366</option>
-            <option value="ULC S610">ULC S610</option>
-            <option value="ULC S627">ULC S627</option>
-            <option value="ULC S628">ULC S628</option>
-            <option value="Other">Other</option>
-            <option value="Not Labelled">Not labelled</option>
-          </select>
-          </td>
+            <td data-label="Shielding"><select name="shielding" id="shielding">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+            </td>
+            <td data-label="Label"><select name="label" id="label">
+              <option value="">Select</option>
+              <option value="CSA B366">CSA B366</option>
+              <option value="ULC S610">ULC S610</option>
+              <option value="ULC S627">ULC S627</option>
+              <option value="ULC S628">ULC S628</option>
+              <option value="Other">Other</option>
+              <option value="Not Labelled">Not labelled</option>
+            </select>
+            </td>
+            <td data-label="Location">
+              <select name="location" id="location">
+                <option value="">Select</option>
+                <option value="Dwelling">Dwelling</option>
+                <option value="Garage attached/detached">Garage attached/detached</option>
+                <option value="Outbuilding">Outbuilding</option>
+                <option value="Outside">Other</option>
+                <option value="Barn">Barn</option>
+                <option value="Other">Other</option>
+              </select>
+            </td>
+          </tr>
         </tbody>
       </table>
     </section>
@@ -224,15 +252,24 @@
       </table>
     </section>
 
-    <section>
-      <h2>Notes</h2>
-      <textarea name="remarks" rows="5"></textarea>
-    </section>
+        <section>
+          <h2>Notes</h2>
+          <textarea name="remarks" rows="5"></textarea>
+        </section>
+      </div>
+    </div>
 
-    <div class="actions">
-      <button type="button" id="shareBtn">Share / Save</button>
-      <button type="button" id="saveOneDriveBtn">Save to OneDrive</button>
-      <button type="button" id="resetBtn">Reset</button>
+    <div id="buttonsContainer">
+      <div style="margin:10px 0; text-align:left;">
+        <button type="button" id="addAnotherBtn">Add Another Appliance</button>
+        <span id="savedCount" style="margin-left:8px;color:#333;font-weight:600"></span>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="shareBtn">Save</button>
+        <button type="button" id="previewBtn">Preview PDF</button>
+        <button type="button" id="resetBtn">Reset</button>
+      </div>
     </div>
 
   </form>
@@ -248,11 +285,25 @@
     </div>
   </div>
 
+  <!-- PDF Preview modal -->
+  <div id="previewModal" class="modal" aria-hidden="true">
+    <div class="modal-content" style="width:90%; max-width:980px; height:80vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <h3 style="margin:0">PDF Preview</h3>
+        <div>
+          <button id="downloadPreviewBtn" type="button">Download</button>
+          <button id="closePreviewBtn" type="button">Close</button>
+        </div>
+      </div>
+      <div style="flex:1; margin-top:8px; overflow:hidden;">
+        <iframe id="previewFrame" style="width:100%; height:100%; border:0;" title="PDF Preview"></iframe>
+      </div>
+    </div>
+  </div>
+
   <!-- jsPDF for client-side PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <!-- MSAL for Microsoft Graph authentication (OneDrive uploads) -->
-  <script src="https://alcdn.msauth.net/browser/2.42.0/js/msal-browser.min.js"></script>
   <link rel="manifest" href="manifest.json">
   <!-- Apple touch icon (optional) -->
   <link rel="icon" type="image/png" sizes="192x192" href="woodicon.png">
