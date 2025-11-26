@@ -1728,21 +1728,38 @@ document.addEventListener('DOMContentLoaded', function () {
 					}
 					
 					const { blob, suggestedName } = await generatePdfBlobForAll(meta, entries);
-					const url = URL.createObjectURL(blob);
-					previewFrame.src = url;
-					previewModal.setAttribute('aria-hidden', 'false');
-					// store URL for later revoke
-					previewModal._previewUrl = url;
-					previewModal._previewSuggestedName = suggestedName;
-					if (downloadPreviewBtn) {
-						downloadPreviewBtn.onclick = function () {
-							const a = document.createElement('a');
-							a.href = url;
-							a.download = suggestedName;
-							document.body.appendChild(a);
-							a.click();
-							a.remove();
-						};
+					
+					// Detect mobile device - if mobile, directly download instead of preview
+					const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+					
+					if (isMobile) {
+						// On mobile, directly trigger download
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = suggestedName;
+						document.body.appendChild(a);
+						a.click();
+						a.remove();
+						setTimeout(() => URL.revokeObjectURL(url), 100);
+					} else {
+						// On desktop, show preview modal
+						const url = URL.createObjectURL(blob);
+						previewFrame.src = url;
+						previewModal.setAttribute('aria-hidden', 'false');
+						// store URL for later revoke
+						previewModal._previewUrl = url;
+						previewModal._previewSuggestedName = suggestedName;
+						if (downloadPreviewBtn) {
+							downloadPreviewBtn.onclick = function () {
+								const a = document.createElement('a');
+								a.href = url;
+								a.download = suggestedName;
+								document.body.appendChild(a);
+								a.click();
+								a.remove();
+							};
+						}
 					}
 				} catch (err) {
 					console.error('Preview generation failed', err);
