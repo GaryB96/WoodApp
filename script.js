@@ -276,6 +276,27 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
+	// Display service worker cache version
+	(function displayVersion() {
+		const versionDisplay = document.getElementById('versionDisplay');
+		if (versionDisplay && 'serviceWorker' in navigator) {
+			navigator.serviceWorker.getRegistration().then(reg => {
+				if (reg && reg.active) {
+					// Fetch the service worker script to get the cache name
+					fetch('./sw.js')
+						.then(response => response.text())
+						.then(text => {
+							const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+							if (match) {
+								versionDisplay.textContent = `v${match[1].replace('woodapp-v', '')}`;
+							}
+						})
+						.catch(() => {});
+				}
+			}).catch(() => {});
+		}
+	})();
+
 	// Clearance row evaluation: color rows based on required vs actual values and shielding
 	function parseNumberForComparison(val) {
 		if (val === null || val === undefined) return NaN;
