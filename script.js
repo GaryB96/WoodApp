@@ -1729,19 +1729,24 @@ document.addEventListener('DOMContentLoaded', function () {
 					
 					const { blob, suggestedName } = await generatePdfBlobForAll(meta, entries);
 					
-					// Detect mobile device - if mobile, directly download instead of preview
+					// Detect mobile device - if mobile, open PDF in new tab for preview
 					const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 					
 					if (isMobile) {
-						// On mobile, directly trigger download
+						// On mobile, open PDF in a new tab/window for preview
 						const url = URL.createObjectURL(blob);
-						const a = document.createElement('a');
-						a.href = url;
-						a.download = suggestedName;
-						document.body.appendChild(a);
-						a.click();
-						a.remove();
-						setTimeout(() => URL.revokeObjectURL(url), 100);
+						const newWindow = window.open(url, '_blank');
+						if (!newWindow) {
+							// If popup blocked, fall back to download
+							const a = document.createElement('a');
+							a.href = url;
+							a.download = suggestedName;
+							document.body.appendChild(a);
+							a.click();
+							a.remove();
+						}
+						// Clean up URL after a delay
+						setTimeout(() => URL.revokeObjectURL(url), 60000);
 					} else {
 						// On desktop, show preview modal
 						const url = URL.createObjectURL(blob);
