@@ -960,19 +960,95 @@ document.addEventListener('DOMContentLoaded', function () {
 						parent.insertBefore(makeInput, wrapper);
 						wrapper.remove();
 					}
-					// Now reinitialize with the same logic as appliance 1
-					await initializeManufacturerCombo(makeInput);
-				}
-				
-				// Scroll to new section
-				clone.scrollIntoView({ behavior: 'smooth', block: 'start' });
-				
-			} catch (e) {
+			// Now reinitialize with the same logic as appliance 1
+			await initializeManufacturerCombo(makeInput);
+		}
+		
+		// Attach clearance row evaluation listeners to the cloned section
+		const clonedClearancesTable = clone.querySelector('table:not(.materials-table)');
+		if (clonedClearancesTable) {
+			clonedClearancesTable.addEventListener('input', function (e) {
+				const row = e.target.closest('tr');
+				if (row) evaluateClearanceRow(row);
+			});
+			clonedClearancesTable.addEventListener('change', function (e) {
+				const row = e.target.closest('tr');
+				if (row) evaluateClearanceRow(row);
+			});
+			// Initial evaluation for all rows
+			Array.from(clonedClearancesTable.querySelectorAll('tbody tr')).forEach(r => evaluateClearanceRow(r));
+		}
+		
+		// Update delete button visibility and renumber
+		updateApplianceSections();			// Scroll to new section
+			clone.scrollIntoView({ behavior: 'smooth', block: 'start' });			} catch (e) {
 				console.error('Failed to add appliance section', e);
 				alert('Unable to add appliance: ' + (e && e.message ? e.message : e));
 			}
 		});
 	}
+
+
+// Update delete button visibility and renumber appliances
+function updateApplianceSections() {
+	const container = document.getElementById('appliancesContainer');
+	if (!container) return;
+	
+	const sections = container.querySelectorAll('.appliance-section:not(.collapsing)');
+	const hasMultiple = sections.length > 1;
+	
+	sections.forEach((section, index) => {
+		const num = index + 1;
+		section.setAttribute('data-appliance-num', num);
+		
+		const heading = section.querySelector('.appliance-heading');
+		if (heading) {
+			heading.textContent = num === 1 ? 'Appliance' : `Appliance ${num}`;
+		}
+		
+		const deleteBtn = section.querySelector('.delete-appliance-btn');
+		if (deleteBtn) {
+			deleteBtn.style.display = hasMultiple ? 'block' : 'none';
+		}
+	});
+}
+
+// Delete appliance section with animation
+function deleteApplianceSection(section) {
+	const num = section.getAttribute('data-appliance-num');
+	
+	if (!confirm(`Are you sure you want to remove appliance ${num}?`)) {
+		return;
+	}
+	
+	// Add collapsing class to trigger animation
+	section.classList.add('collapsing');
+	
+	// Remove from DOM after animation completes
+	setTimeout(() => {
+		section.remove();
+		updateApplianceSections();
+	}, 400); // Match CSS transition duration
+}
+
+// Attach delete handlers to existing and new appliance sections
+function attachDeleteHandlers() {
+	const container = document.getElementById('appliancesContainer');
+	if (!container) return;
+	
+	container.addEventListener('click', function(e) {
+		if (e.target.classList.contains('delete-appliance-btn')) {
+			const section = e.target.closest('.appliance-section');
+			if (section) {
+				deleteApplianceSection(section);
+			}
+		}
+	});
+}
+
+// Initialize delete button visibility on page load
+attachDeleteHandlers();
+updateApplianceSections();
 
 
 	// ---------- PDF generation and save helpers ----------

@@ -32,6 +32,11 @@ input[type="text"], input[type="email"], input[type="number"], input[type="date"
 /* Make table headers stand out */
 thead th { background: var(--wa-header-bg); color: var(--wa-label); border-color: var(--wa-border); }
 
+/* Appliance section styles and collapse animation */
+.appliance-section { transition: all 0.4s ease-out; max-height: 10000px; overflow: hidden; opacity: 1; }
+.appliance-section.collapsing { max-height: 0; opacity: 0; margin-bottom: 0; padding: 0; }
+.delete-appliance-btn:hover { background: #b71c1c; }
+
 /* Info button and tooltip for chimney code */
 .info-btn { background:#007acc; color:white; border:none; border-radius:3px; width:22px; height:22px; cursor:pointer; }
 .info-btn:focus { outline:2px solid #005a9e; }
