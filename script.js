@@ -652,26 +652,36 @@ document.addEventListener('DOMContentLoaded', function () {
 			});
 		};
 		
-		// Remove facing rows and reset flue labels before applying new rules
-		removeFacingRows();
-		renameFlueToChimney(false);
-		
-		const hideByKeywords = (keywords) => {
-			Array.from(clearancesTable.querySelectorAll('tbody tr')).forEach(r => {
-				const first = r.querySelector('td');
-				if (!first) return;
-				const text = first.textContent.trim().toLowerCase();
-				if (keywords.some(k => text.includes(k))) {
-					r.style.display = 'none';
-					Array.from(r.querySelectorAll('input, select, textarea')).forEach(el => {
-						if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
-						else el.value = '';
-					});
-				}
-			});
-		};
-		
-		switch (v) {
+	// Remove facing rows and reset flue labels before applying new rules
+	removeFacingRows();
+	renameFlueToChimney(false);
+	
+	// First, show all rows and restore their default values
+	Array.from(clearancesTable.querySelectorAll('tbody tr')).forEach(r => {
+		r.style.display = '';
+		Array.from(r.querySelectorAll('input, select, textarea')).forEach(el => {
+			if (el.type === 'checkbox' || el.type === 'radio') {
+				el.checked = false;
+			} else if (el.defaultValue !== undefined && el.defaultValue !== '') {
+				el.value = el.defaultValue;
+			}
+		});
+	});
+	
+	const hideByKeywords = (keywords) => {
+		Array.from(clearancesTable.querySelectorAll('tbody tr')).forEach(r => {
+			const first = r.querySelector('td');
+			if (!first) return;
+			const text = first.textContent.trim().toLowerCase();
+			if (keywords.some(k => text.includes(k))) {
+				r.style.display = 'none';
+				Array.from(r.querySelectorAll('input, select, textarea')).forEach(el => {
+					if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+					else el.value = '';
+				});
+			}
+		});
+	};		switch (v) {
 			case 'kitchen wood range':
 				hideByKeywords(['plenum','mantel']);
 				break;
@@ -2474,21 +2484,28 @@ updateApplianceSections();
 		}
 	}
 
-	function applyTypeRules(val) {
-		if (!clearancesTable) return;
-		// normalize
-		const v = (val || '').toString().toLowerCase();
+function applyTypeRules(val) {
+	if (!clearancesTable) return;
+	// normalize
+	const v = (val || '').toString().toLowerCase();
 
-		// start by showing all rows
-		getAllClearanceRows().forEach(r => r.style.display = '');
+	// start by showing all rows and restore their default values
+	getAllClearanceRows().forEach(r => {
+		r.style.display = '';
+		Array.from(r.querySelectorAll('input, select, textarea')).forEach(el => {
+			if (el.type === 'checkbox' || el.type === 'radio') {
+				el.checked = false;
+			} else if (el.defaultValue !== undefined && el.defaultValue !== '') {
+				el.value = el.defaultValue;
+			}
+		});
+	});
 
-		// remove any previously added facing rows to avoid duplicates; we'll add if needed
-		removeFacingRows();
+	// remove any previously added facing rows to avoid duplicates; we'll add if needed
+	removeFacingRows();
 
-		// ensure labels are in their default 'Flue pipe ...' form before applying rules
-		renameFlueToChimney(false);
-
-		// rename flue -> chimney for outdoor boiler
+	// ensure labels are in their default 'Flue pipe ...' form before applying rules
+	renameFlueToChimney(false);		// rename flue -> chimney for outdoor boiler
 		function renameFlueToChimney(shouldRename) {
 			const mapping = [
 				['flue pipe back', 'Chimney back'],
