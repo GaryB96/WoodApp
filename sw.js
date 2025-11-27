@@ -1,4 +1,4 @@
-const CACHE_NAME = 'woodapp-v1.1';
+const CACHE_NAME = 'woodapp-v1.2';
 
 const PRECACHE_URLS = [
   './',
@@ -7,7 +7,8 @@ const PRECACHE_URLS = [
   './script.js',
   './manifest.json',
   './stovemanufacturers.json',
-  './woodicon.png'
+  './woodicon.png',
+  './README.md'
 ];
 
 self.addEventListener('install', event => {
