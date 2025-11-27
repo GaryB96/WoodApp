@@ -203,6 +203,12 @@ input[type="text"], input[type="email"], input[type="number"], input[type="date"
 /* smaller devices: stack buttons, reduce paddings and font sizes */
 @media (max-width: 700px) {
   body { margin: 10px; }
+  
+  /* Add spacing between header buttons on mobile */
+  .header-buttons button {
+    margin: 4px !important;
+  }
+  
   .actions { 
     flex-direction: column-reverse; 
     display: flex;
@@ -349,6 +355,25 @@ td input, td select, td textarea { box-sizing: border-box; max-width: 100%; }
   
   .info-content h3 {
     font-size: 1.1em;
+  }
+
+  /* PDF Guide modal - full screen on mobile */
+  .guide-modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    padding: 8px !important;
+  }
+
+  .mobile-pdf-hint {
+    display: block !important;
+  }
+
+  /* Make iframe fit better on mobile */
+  #guideFrame {
+    border-radius: 0 !important;
   }
 }
 
