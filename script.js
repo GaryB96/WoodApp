@@ -2267,10 +2267,10 @@ updateApplianceSections();
 	}
 
 	// chimney info button toggle
-	const infoBtn = document.getElementById('chimneyInfoBtn');
+	const chimneyInfoBtn = document.getElementById('chimneyInfoBtn');
 	const infoBox = document.getElementById('chimneyInfo');
-	if (infoBtn && infoBox) {
-		infoBtn.addEventListener('click', function () {
+	if (chimneyInfoBtn && infoBox) {
+		chimneyInfoBtn.addEventListener('click', function () {
 			const shown = infoBox.style.display !== 'none';
 			infoBox.style.display = shown ? 'none' : 'block';
 			infoBtn.setAttribute('aria-expanded', String(!shown));
@@ -2657,67 +2657,64 @@ function applyTypeRules(val) {
 			});
 		}
 	}
-});
 
-// Info modal functionality
-const infoBtn = document.getElementById('infoBtn');
-const infoModal = document.getElementById('infoModal');
-const closeInfoBtn = document.getElementById('closeInfoBtn');
-const infoContent = document.getElementById('infoContent');
+	// Info modal functionality
+	const helpBtn = document.getElementById('infoBtn');
+	const infoModal = document.getElementById('infoModal');
+	const closeInfoBtn = document.getElementById('closeInfoBtn');
+	const infoContent = document.getElementById('infoContent');
 
-// Simple markdown parser for basic formatting
-function parseMarkdown(text) {
-let html = text;
-
-// Headers
-html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-
-// Bold
-html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-// Links
-html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-// Lists
-html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
-html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-
-// Numbered lists
-html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
-
-// Paragraphs
-html = html.split('\n\n').map(para => {
-if (!para.trim().startsWith('<') && para.trim() !== '') {
-return '<p>' + para.trim() + '</p>';
-}
-return para;
-}).join('\n');
-
-return html;
-}
-
-// Load README content
-async function loadReadme() {
-try {
-const response = await fetch('README.md');
-if (response.ok) {
-const text = await response.text();
-infoContent.innerHTML = parseMarkdown(text);
-} else {
-infoContent.innerHTML = '<p>Unable to load help content. Please check your internet connection.</p>';
-}
-} catch (error) {
-console.error('Error loading README:', error);
-infoContent.innerHTML = '<p>Unable to load help content. Please ensure you have an internet connection.</p>';
-}
-}
+	// Simple markdown parser for basic formatting
+	function parseMarkdown(text) {
+		let html = text;t;
+		
+		// Headers
+		html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+		html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+		html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+		html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+		
+		// Bold
+		html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+		
+		// Links
+		html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+		
+		// Lists
+		html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+		html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+		
+		// Numbered lists
+		html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+		
+		// Paragraphs
+		html = html.split('\n\n').map(para => {
+			if (!para.trim().startsWith('<') && para.trim() !== '') {
+				return '<p>' + para.trim() + '</p>';
+			}
+			return para;
+		}).join('\n');
+		
+		return html;
+	}	// Load README content
+	async function loadReadme() {
+		try {
+			const response = await fetch('README.md');
+			if (response.ok) {
+				const text = await response.text();
+				infoContent.innerHTML = parseMarkdown(text);
+			} else {
+				infoContent.innerHTML = '<p>Unable to load help content. Please check your internet connection.</p>';
+			}
+		} catch (error) {
+			console.error('Error loading README:', error);
+			infoContent.innerHTML = '<p>Unable to load help content. Please ensure you have an internet connection.</p>';
+		}
+	}
 
 // Open info modal
-if (infoBtn) {
-infoBtn.addEventListener('click', async function() {
+if (helpBtn) {
+helpBtn.addEventListener('click', async function() {
 infoModal.setAttribute('aria-hidden', 'false');
 if (!infoContent.innerHTML || infoContent.innerHTML.trim() === '') {
 infoContent.innerHTML = '<p style="text-align:center;">Loading...</p>';

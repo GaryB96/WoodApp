@@ -58,6 +58,16 @@ button:active {
   background: linear-gradient(135deg, #5761E6 0%, #000BC7 100%);
 }
 
+/* Info/Help button */
+#infoBtn {
+  background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+  color: white;
+}
+
+#infoBtn:hover {
+  background: linear-gradient(135deg, #5761E6 0%, #000BC7 100%);
+}
+
 /* Add appliance button */
 #addAnotherBtn {
   background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
@@ -357,6 +367,10 @@ body.dark-mode .info-content pre {
 
 /* Dark mode button adjustments - slightly muted gradients */
 body.dark-mode #themeToggle {
+  background: linear-gradient(135deg, #5a62d9 0%, #000bb8 100%);
+}
+
+body.dark-mode #infoBtn {
   background: linear-gradient(135deg, #5a62d9 0%, #000bb8 100%);
 }
 
