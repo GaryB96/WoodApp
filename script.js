@@ -334,6 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				if (chk) shielded = !!chk.checked;
 			}
 		}
+		
 		row.classList.remove('row-positive','row-negative','row-caution');
 		if (!Number.isNaN(reqNum) && !Number.isNaN(actNum)) {
 			if (actNum >= reqNum) {
@@ -341,9 +342,9 @@ document.addEventListener('DOMContentLoaded', function () {
 			} else {
 				if (shielded) row.classList.add('row-caution');
 				else row.classList.add('row-negative');
-			}
 		}
 	}
+}
 
 	// Attach listener to clearancesTable for input/change events (delegation)
 	const clearancesTable = document.getElementById('clearancesTable');
@@ -707,7 +708,72 @@ document.addEventListener('DOMContentLoaded', function () {
 				break;
 		}
 	}
-	
+
+	// Apply flue pipe type clearances (SW=18", DW=6")
+	function applyFluePipeTypeClearances(section, fluePipeType) {
+		let clearancesTable = null;
+		const sections = section.querySelectorAll('section');
+		for (const sec of sections) {
+			const h2 = sec.querySelector('h2');
+			if (h2 && h2.textContent.includes('Measurements')) {
+				clearancesTable = sec.querySelector('table');
+				break;
+			}
+		}
+		if (!clearancesTable) return;
+		
+		// Base clearance values (always use base values, shielding is applied per-row during evaluation)
+		const baseValue = fluePipeType === 'SW' ? 18 : fluePipeType === 'DW' ? 6 : null;
+		const requiredValue = baseValue !== null ? baseValue.toString() : '';
+		
+		// Update flue pipe rows
+		const rows = Array.from(clearancesTable.querySelectorAll('tbody tr'));
+		rows.forEach(row => {
+			const firstCell = row.querySelector('td');
+			if (!firstCell) return;
+			const label = firstCell.textContent.trim().toLowerCase();
+			
+			if (label.includes('flue pipe back') || label.includes('flue pipe side') || label.includes('flue pipe ceiling')) {
+				const requiredInput = row.querySelectorAll('td input')[0];
+				if (requiredInput && requiredValue) {
+					requiredInput.value = requiredValue;
+					// Trigger evaluation
+					evaluateClearanceRow(row);
+				}
+			}
+		});
+	}
+
+	// Helper function to update required field value when shielded checkbox changes for flue pipe rows
+	function updateFluePipeRequiredValue(row, checkbox) {
+		const firstCell = row.querySelector('td');
+		if (!firstCell) return;
+		const label = firstCell.textContent.trim().toLowerCase();
+		
+		// Only apply to flue pipe rows
+		if (!label.includes('flue pipe back') && !label.includes('flue pipe side') && !label.includes('flue pipe ceiling')) {
+			return;
+		}
+		
+		const cells = row.querySelectorAll('td');
+		const requiredInput = cells[1] ? cells[1].querySelector('input') : null;
+		if (!requiredInput) return;
+		
+		const currentValue = parseFloat(requiredInput.value);
+		if (isNaN(currentValue)) return;
+		
+		if (checkbox.checked) {
+			// Reduce by 50%
+			requiredInput.value = (currentValue / 2).toString();
+		} else {
+			// Restore to 100% (double it)
+			requiredInput.value = (currentValue * 2).toString();
+		}
+		
+		// Trigger evaluation
+		evaluateClearanceRow(row);
+	}
+
 	function addShieldedColumnToSection(section) {
 		// Find the clearances table - it's inside the section with "Measurements & Clearances" heading
 		let clearancesTable = null;
@@ -733,20 +799,24 @@ document.addEventListener('DOMContentLoaded', function () {
 			if (!firstCell) return;
 			const colspan = firstCell.getAttribute('colspan');
 			if (colspan && parseInt(colspan) > 1) {
-				firstCell.setAttribute('colspan', parseInt(colspan) + 1);
-				return;
-			}
-			const td = document.createElement('td');
-			const input = document.createElement('input');
-			input.type = 'checkbox';
-			input.name = `shielded_${Math.random().toString(36).substr(2, 9)}`;
-			input.className = 'shielded-checkbox';
-			td.appendChild(input);
-			row.appendChild(td);
+			firstCell.setAttribute('colspan', parseInt(colspan) + 1);
+			return;
+		}
+		const td = document.createElement('td');
+		const input = document.createElement('input');
+		input.type = 'checkbox';
+		input.name = `shielded_${Math.random().toString(36).substr(2, 9)}`;
+		input.className = 'shielded-checkbox';
+		
+		// Add event listener to update required value for flue pipe rows
+		input.addEventListener('change', function() {
+			updateFluePipeRequiredValue(row, input);
 		});
-	}
-	
-	function removeShieldedColumnFromSection(section) {
+		
+		td.appendChild(input);
+		row.appendChild(td);
+	});
+}	function removeShieldedColumnFromSection(section) {
 		// Find the clearances table - it's inside the section with "Measurements & Clearances" heading
 		let clearancesTable = null;
 		const sections = section.querySelectorAll('section');
@@ -937,19 +1007,25 @@ document.addEventListener('DOMContentLoaded', function () {
 					});
 				}
 				
-				const shieldingSelect = clone.querySelector('select[name="shielding"]');
-				if (shieldingSelect) {
-					shieldingSelect.addEventListener('change', function() {
-						const clearancesTable = clone.querySelector('table');
-						if (clearancesTable) {
-							const val = (shieldingSelect.value || '').toString().toLowerCase();
-							if (val === 'yes') addShieldedColumnToSection(clone);
-							else removeShieldedColumnFromSection(clone);
-						}
-					});
+			const shieldingSelect = clone.querySelector('select[name="shielding"]');
+			if (shieldingSelect) {
+			shieldingSelect.addEventListener('change', function() {
+				const clearancesTable = clone.querySelector('table');
+				if (clearancesTable) {
+					const val = (shieldingSelect.value || '').toString().toLowerCase();
+					if (val === 'yes') addShieldedColumnToSection(clone);
+					else removeShieldedColumnFromSection(clone);
 				}
-				
-				// Populate manufacturer dropdown for new section
+			});
+		}
+		
+		// Add listener for flue pipe type changes in cloned appliance
+		const fluePipeTypeSelect = clone.querySelector('select[name="flue_pipe_type"]');
+		if (fluePipeTypeSelect) {
+			fluePipeTypeSelect.addEventListener('change', function() {
+				applyFluePipeTypeClearances(clone, fluePipeTypeSelect.value);
+			});
+		}				// Populate manufacturer dropdown for new section
 				const makeInput = clone.querySelector('input[name="make"]');
 				if (makeInput) {
 					// Remove the cloned combo-wrapper structure and rebuild it fresh
@@ -1124,7 +1200,7 @@ updateApplianceSections();
 
 		let chimneyLegend = [];
 		if (Array.isArray(data.appliances) && data.appliances.length) {
-			const appHead = ['Type', 'Make', 'Model', 'Installed By', 'Chimney Code', 'Own/Shared', 'Chimney Condition', 'Shielding', 'Label', 'Location'];
+			const appHead = ['Type', 'Make', 'Model', 'Installed By', 'Chimney Code', 'Own/Shared', 'Chimney Condition', 'Shielding', 'Label', 'Location', 'Flue Pipe Type'];
 			const appBody = data.appliances.map((app, idx) => {
 				const maj = app.chimney_major || app['chimney_major'] || '';
 				const min = app.chimney_minor || app['chimney_minor'] || '';
@@ -1150,22 +1226,32 @@ updateApplianceSections();
 						}
 					}
 				} catch (e) {}
-				if (chimneyCode) chimneyLegend.push({ code: chimneyCode, words: chimneyFullWords });
-				return [
-					app.type || app['type'] || (app['col0'] || ''),
-					app.make || '',
-					app.model || '',
-					app.installed_by || app['installed_by'] || '',
-					chimneyCode,
-					app.own_shared || app['own_shared'] || '',
-					app.chimney_condition || app['chimney_condition'] || '',
-					(app.shielding === true || app.shielding === 'yes' || app.shielding === 'Yes') ? 'Yes' : (app.shielding === 'no' || app.shielding === false ? 'No' : (app.shielding || '')),
-					app.label || '',
-					app.location || ''
-				];
-			});
-
-			doc.setFontSize(12);
+			if (chimneyCode) chimneyLegend.push({ code: chimneyCode, words: chimneyFullWords });
+			
+			// Map flue_pipe_type to display text
+			let fluePipeDisplay = '';
+			if (app.flue_pipe_type === 'SW') {
+				fluePipeDisplay = 'SW (18")';
+			} else if (app.flue_pipe_type === 'DW') {
+				fluePipeDisplay = 'DW (6")';
+			} else {
+				fluePipeDisplay = 'N/A';
+			}
+			
+			return [
+				app.type || app['type'] || (app['col0'] || ''),
+				app.make || '',
+				app.model || '',
+				app.installed_by || app['installed_by'] || '',
+				chimneyCode,
+				app.own_shared || app['own_shared'] || '',
+				app.chimney_condition || app['chimney_condition'] || '',
+				(app.shielding === true || app.shielding === 'yes' || app.shielding === 'Yes') ? 'Yes' : (app.shielding === 'no' || app.shielding === false ? 'No' : (app.shielding || '')),
+				app.label || '',
+				app.location || '',
+				fluePipeDisplay
+			];
+		});			doc.setFontSize(12);
 			doc.setFont('helvetica', 'bold');
 			doc.text('Appliance Details', margin, cursorY);
 			cursorY += 8;
@@ -1512,8 +1598,9 @@ updateApplianceSections();
 							['Chimney Condition', app.chimney_condition || ''],
 							['Shielding', (app.shielding === true || app.shielding === 'yes' || app.shielding === 'Yes') ? 'Yes' : (app.shielding || '')],
 							['Label', app.label || ''],
-							['Location', app.location || '']
-						];
+							['Location', app.location || ''],
+						['Flue Pipe Type', (app.flue_pipe_type === 'SW' ? 'SW (18")' : (app.flue_pipe_type === 'DW' ? 'DW (6")' : 'N/A'))]
+					];
 						doc.setFontSize(12);
 						doc.setFont('helvetica', 'bold');
 						doc.text('Appliance Details', margin, cursorY);
@@ -1740,7 +1827,7 @@ updateApplianceSections();
 				}
 			}
 			
-			// Get data from second materials table (own/shared, condition, shielding, label, location)
+			// Get data from second materials table (own/shared, condition, shielding, label, location, flue_pipe_type)
 			if (materialsTables.length >= 2) {
 				const secondTable = materialsTables[1].querySelector('tbody tr');
 				if (secondTable) {
@@ -1754,6 +1841,8 @@ updateApplianceSections();
 					if (labelEl) app.label = labelEl.value || '';
 					const locationEl = secondTable.querySelector('select[name="location"]');
 					if (locationEl) app.location = locationEl.value || '';
+					const fluePipeTypeEl = secondTable.querySelector('select[name="flue_pipe_type"]');
+					if (fluePipeTypeEl) app.flue_pipe_type = fluePipeTypeEl.value || '';
 				}
 			}
 			
@@ -1926,7 +2015,7 @@ updateApplianceSections();
 			// chimneyLegend collected here for use later in Notes (declare in outer scope)
 			let chimneyLegend = [];
 			if (Array.isArray(data.appliances) && data.appliances.length) {
-				const appHead = ['Type', 'Make', 'Model', 'Installed By', 'Chimney Code', 'Own/Shared', 'Chimney Condition', 'Shielding', 'Label', 'Location'];
+				const appHead = ['Type', 'Make', 'Model', 'Installed By', 'Chimney Code', 'Own/Shared', 'Chimney Condition', 'Shielding', 'Label', 'Location', 'Flue Pipe Type'];
 				// Collect chimney legend lines while building appliance rows so we can add the full wording to the Notes
 				const appBody = data.appliances.map((app, idx) => {
 					// compute chimney code from possible fields collected in the row
@@ -2220,19 +2309,23 @@ updateApplianceSections();
 			}
 			const shieldName = `shielded_${baseName}`;
 
-			const td = document.createElement('td');
-			const input = document.createElement('input');
-			input.type = 'checkbox';
-			input.name = shieldName;
-			input.className = 'shielded-checkbox';
-			td.appendChild(input);
-			// insert at the correct index in the row
-			if (row.children.length > insertIndex) row.insertBefore(td, row.children[insertIndex]);
-			else row.appendChild(td);
+		const td = document.createElement('td');
+		const input = document.createElement('input');
+		input.type = 'checkbox';
+		input.name = shieldName;
+		input.className = 'shielded-checkbox';
+		
+		// Add event listener to update required value for flue pipe rows
+		input.addEventListener('change', function() {
+			updateFluePipeRequiredValue(row, input);
 		});
-	}
-
-	function removeShieldedColumn() {
+		
+		td.appendChild(input);
+		// insert at the correct index in the row
+		if (row.children.length > insertIndex) row.insertBefore(td, row.children[insertIndex]);
+		else row.appendChild(td);
+	});
+}	function removeShieldedColumn() {
 		if (!clearancesTable) return;
 		const theadRow = clearancesTable.querySelector('thead tr');
 		// find Shielded header index
@@ -2472,6 +2565,17 @@ updateApplianceSections();
 		applyTypeRules(typeSelect.value);
 	}
 
+	// Add listener for flue pipe type changes in first appliance
+	const fluePipeTypeSelect = document.getElementById('flue_pipe_type');
+	if (fluePipeTypeSelect) {
+		fluePipeTypeSelect.addEventListener('change', function () {
+			const section = fluePipeTypeSelect.closest('.appliance-section');
+			if (section) {
+				applyFluePipeTypeClearances(section, fluePipeTypeSelect.value);
+			}
+		});
+	}
+
 	if (resetBtn) {
 		resetBtn.addEventListener('click', function () {
 			const modal = document.getElementById('resetModal');
@@ -2537,3 +2641,11 @@ updateApplianceSections();
 		}
 	}
 });
+
+
+
+
+
+
+
+

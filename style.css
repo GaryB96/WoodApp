@@ -23,7 +23,92 @@ input[type="text"], input[type="email"], input[type="number"], input[type="date"
 .materials-table th, .materials-table td { border: 1px solid #ddd; }
 .actions { margin-top: 12px; }
 .result { white-space: pre-wrap; background:#f1f5ff; padding:10px; border:1px solid var(--wa-border); }
-.floor-pad { font-weight: 700; font-size: 1.1em; }
+.floor-pad { font-weight: 700; font-size: 1.1em; background: var(--wa-header-bg); color: var(--wa-label); }
+
+/* Button styling */
+button {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Theme toggle button */
+#themeToggle {
+  background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+  color: white;
+}
+
+#themeToggle:hover {
+  background: linear-gradient(135deg, #5761E6 0%, #000BC7 100%);
+}
+
+/* Add appliance button */
+#addAnotherBtn {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  color: white;
+}
+
+#addAnotherBtn:hover {
+  background: linear-gradient(135deg, #4a9428 0%, #92c754 100%);
+}
+
+/* Save button */
+#shareBtn {
+  background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+  color: white;
+}
+
+#shareBtn:hover {
+  background: linear-gradient(135deg, #1c7d96 0%, #5cc0d8 100%);
+}
+
+/* Preview PDF button */
+#previewBtn {
+  background: linear-gradient(135deg, #fc8b67 0%, #ffc371 100%);
+  color: rgb(255, 255, 255);
+}
+
+#previewBtn:hover {
+  background: linear-gradient(135deg, #e67a58 0%, #e6b05f 100%);
+}
+
+/* Reset button */
+#resetBtn {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+#resetBtn:hover {
+  background: linear-gradient(135deg, #d32d40 0%, #db4e38 100%);
+}
+
+/* Delete appliance button */
+.delete-appliance-btn {
+  background: linear-gradient(135deg, #e55d87 0%, #5fc3e4 100%);
+  color: white;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.delete-appliance-btn:hover {
+  background: linear-gradient(135deg, #cd4f75 0%, #4facd0 100%);
+}
 
 /* Small helper for remove button */
 .remove-row { background: #f8d7da; border: 1px solid #f5c2c7; color: #842029; padding: 2px 6px; cursor: pointer; }
@@ -87,8 +172,18 @@ input[type="text"], input[type="email"], input[type="number"], input[type="date"
 /* smaller devices: stack buttons, reduce paddings and font sizes */
 @media (max-width: 700px) {
   body { margin: 10px; }
-  .actions { flex-direction: column-reverse; }
+  .actions { 
+    flex-direction: column-reverse; 
+    display: flex;
+  }
   .actions button { width: 100%; }
+  
+  /* Move reset to bottom with spacing above it */
+  #resetBtn { 
+    order: -1; 
+    margin-top: 20px;
+  }
+  
   th, td { font-size: 13px; padding: 8px; }
   h1 { font-size: 20px; }
 }
@@ -133,8 +228,35 @@ body.dark-mode section:first-of-type label { color: #ffffff; }
 body.dark-mode table { border-color: #233044; }
 body.dark-mode th, body.dark-mode td { border-color:#223241; }
 body.dark-mode thead th { background:#172635; color:#e6eef6; }
+body.dark-mode .floor-pad { background:#172635; color:#e6eef6; }
 body.dark-mode .materials-table tbody tr { background:#0b1520; }
 body.dark-mode .modal-content { background:#0f1720; color:#e6eef6; border:1px solid #233044; }
+
+/* Dark mode button adjustments - slightly muted gradients */
+body.dark-mode #themeToggle {
+  background: linear-gradient(135deg, #5a62d9 0%, #000bb8 100%);
+}
+
+body.dark-mode #addAnotherBtn {
+  background: linear-gradient(135deg, #265f0b 0%, #141f07 100%);
+}
+
+body.dark-mode #shareBtn {
+  background: linear-gradient(135deg, #1c7d96 0%, #1a363d 100%);
+}
+
+body.dark-mode #previewBtn {
+  background: linear-gradient(135deg, #d97555 0%, #42331b 100%);
+}
+
+body.dark-mode #resetBtn {
+  background: linear-gradient(135deg, #c72d3a 0%, #c7432f 100%);
+}
+
+body.dark-mode .delete-appliance-btn {
+  background: linear-gradient(135deg, #b84969 0%, #4891b8 100%);
+}
+
 /* Dark-mode form controls: slightly darker inputs for comfortable contrast */
 body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
   background: #0f2230;
