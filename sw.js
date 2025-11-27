@@ -1,4 +1,4 @@
-const CACHE_NAME = 'woodapp-v3';
+const CACHE_NAME = 'woodapp-v1.1';
 
 const PRECACHE_URLS = [
   './',
