@@ -126,7 +126,7 @@ A Progressive Web App (PWA) for conducting wood appliance inspections and genera
 3. **Record Clearances**:
    - Enter **Required** clearances (auto-filled for some types)
    - Measure and enter **Actual** clearances
-   - Check **Shielded** boxes if shielding is present (reduces requirement by 50%)
+   - Check **Shielded** boxes if shielding is present
    - Watch for color-coded feedback (green/yellow/red)
 
 4. **Add Floor Pad Measurements**:
@@ -154,18 +154,10 @@ A Progressive Web App (PWA) for conducting wood appliance inspections and genera
   - SW (Single Wall) = 18" clearance requirement
   - DW (Double Wall) = 6" clearance requirement
   - N/A = For appliances without flue pipes
-- **Shielding**: Check the shielded box for any row to automatically reduce required clearance by 50%
+- **Shielding**: Check the shielded box for any row
 - **Dark Mode**: Toggle theme for comfortable viewing in low-light conditions
 - **Offline Mode**: After first load, the app works without internet
 - **Multi-Device**: Install on all your devices for flexibility
-
-## Technical Details
-
-- **Progressive Web App (PWA)**: Installable on all platforms
-- **Offline Support**: Service worker caches app for offline use
-- **Local Storage**: Data persists in browser localStorage
-- **PDF Generation**: Client-side PDF creation with jsPDF
-- **Responsive Design**: Adapts to phone, tablet, and desktop screens
 
 ## Troubleshooting
 
@@ -194,12 +186,3 @@ A Progressive Web App (PWA) for conducting wood appliance inspections and genera
 ## Updates
 
 The app automatically updates when you reload with an internet connection. The version number is displayed at the top of the form.
-
-## Support
-
-For issues or questions, contact the development team or your system administrator.
-
----
-
-**Version**: Check the version display at the top of the app  
-**Last Updated**: November 2025
