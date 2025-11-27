@@ -2750,14 +2750,23 @@ function applyTypeRules(val) {
 	const downloadGuideBtn = document.getElementById('downloadGuideBtn');
 	const guideFrame = document.getElementById('guideFrame');
 
+	// Detect if device is mobile
+	const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 	// Open guide modal
 	if (guideBtn) {
 		guideBtn.addEventListener('click', function() {
 			console.log('Guide button clicked');
-			guideModal.setAttribute('aria-hidden', 'false');
-			if (!guideFrame.src) {
-				// Add #view=FitH to make PDF fit width on mobile
-				guideFrame.src = 'Wood Heat Guide.pdf#view=FitH';
+			
+			// On mobile, open PDF in new tab for better experience
+			if (isMobileDevice) {
+				window.open('Wood Heat Guide.pdf', '_blank');
+			} else {
+				// On desktop, show in modal
+				guideModal.setAttribute('aria-hidden', 'false');
+				if (!guideFrame.src) {
+					guideFrame.src = 'Wood Heat Guide.pdf#toolbar=1&navpanes=1&scrollbar=1';
+				}
 			}
 		});
 	}
