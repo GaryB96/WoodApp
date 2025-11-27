@@ -20,6 +20,11 @@ th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
 input[type="text"], input[type="email"], input[type="number"], input[type="date"], textarea, select {
   width: 98%; padding: 6px; box-sizing: border-box;
 }
+
+/* Make date input wider to prevent cutoff on mobile */
+input[type="date"] {
+  min-width: 160px;
+}
 .materials-table th, .materials-table td { border: 1px solid #ddd; }
 .actions { margin-top: 12px; }
 .result { white-space: pre-wrap; background:#f1f5ff; padding:10px; border:1px solid var(--wa-border); }
@@ -52,6 +57,8 @@ button:active {
 #themeToggle {
   background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
   color: white;
+  height: 44px;
+  line-height: 1.2;
 }
 
 #themeToggle:hover {
@@ -62,9 +69,23 @@ button:active {
 #infoBtn {
   background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
   color: white;
+  height: 44px;
+  line-height: 1.2;
 }
 
 #infoBtn:hover {
+  background: linear-gradient(135deg, #5761E6 0%, #000BC7 100%);
+}
+
+/* Guide button */
+#guideBtn {
+  background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+  color: white;
+  height: 44px;
+  line-height: 1.2;
+}
+
+#guideBtn:hover {
   background: linear-gradient(135deg, #5761E6 0%, #000BC7 100%);
 }
 
@@ -371,6 +392,10 @@ body.dark-mode #themeToggle {
 }
 
 body.dark-mode #infoBtn {
+  background: linear-gradient(135deg, #5a62d9 0%, #000bb8 100%);
+}
+
+body.dark-mode #guideBtn {
   background: linear-gradient(135deg, #5a62d9 0%, #000bb8 100%);
 }
 

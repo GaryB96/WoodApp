@@ -25,8 +25,9 @@
 <body>
   <h1>Wood App Form</h1>
   <div style="text-align:center; margin-bottom:8px;">
-    <button id="themeToggle" type="button">Toggle Dark/Light</button>
-    <button id="infoBtn" type="button" style="margin-left:8px;">ℹ️ Help</button>
+    <button id="themeToggle" type="button">🌓 Toggle Dark/Light</button>
+    <button id="infoBtn" type="button" style="margin-left:8px;">ℹ️ App Help</button>
+    <button id="guideBtn" type="button" style="margin-left:8px;">📖 Wood Heat Guide</button>
     <span id="versionDisplay" style="margin-left:16px; font-size:0.85em; color:#666;"></span>
   </div>
 
@@ -322,6 +323,19 @@
       </div>
       <div id="infoContent" class="info-content">
         <!-- Content will be loaded from README.md -->
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Guide modal -->
+  <div id="guideModal" class="modal" aria-hidden="true">
+    <div class="modal-content" style="width:95%; max-width:1100px; height:90vh; display:flex; flex-direction:column; padding:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h3 style="margin:0">Wood Heat Guide</h3>
+        <button id="closeGuideBtn" type="button" style="padding:8px 16px;">Close</button>
+      </div>
+      <div style="flex:1; overflow:hidden;">
+        <iframe id="guideFrame" style="width:100%; height:100%; border:1px solid #ccc; border-radius:4px;" title="Wood Heat Guide"></iframe>
       </div>
     </div>
   </div>

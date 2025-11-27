@@ -2666,7 +2666,7 @@ function applyTypeRules(val) {
 
 	// Simple markdown parser for basic formatting
 	function parseMarkdown(text) {
-		let html = text;t;
+		let html = text;
 		
 		// Headers
 		html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
@@ -2696,46 +2696,83 @@ function applyTypeRules(val) {
 		}).join('\n');
 		
 		return html;
-	}	// Load README content
+	}
+
+	// Load README content
 	async function loadReadme() {
 		try {
 			const response = await fetch('README.md');
 			if (response.ok) {
 				const text = await response.text();
-				infoContent.innerHTML = parseMarkdown(text);
+				const parsed = parseMarkdown(text);
+				infoContent.innerHTML = parsed;
+				console.log('README loaded successfully');
 			} else {
+				console.error('README fetch failed:', response.status);
 				infoContent.innerHTML = '<p>Unable to load help content. Please check your internet connection.</p>';
 			}
 		} catch (error) {
 			console.error('Error loading README:', error);
-			infoContent.innerHTML = '<p>Unable to load help content. Please ensure you have an internet connection.</p>';
+			infoContent.innerHTML = '<p>Unable to load help content: ' + error.message + '</p>';
 		}
 	}
 
-// Open info modal
-if (helpBtn) {
-helpBtn.addEventListener('click', async function() {
-infoModal.setAttribute('aria-hidden', 'false');
-if (!infoContent.innerHTML || infoContent.innerHTML.trim() === '') {
-infoContent.innerHTML = '<p style="text-align:center;">Loading...</p>';
-await loadReadme();
-}
-});
-}
+	// Open info modal
+	if (helpBtn) {
+		helpBtn.addEventListener('click', async function() {
+			console.log('Help button clicked');
+			infoModal.setAttribute('aria-hidden', 'false');
+			infoContent.innerHTML = '<p style="text-align:center;">Loading...</p>';
+			await loadReadme();
+		});
+	}
 
-// Close info modal
-if (closeInfoBtn) {
-closeInfoBtn.addEventListener('click', function() {
-infoModal.setAttribute('aria-hidden', 'true');
-});
-}
+	// Close info modal
+	if (closeInfoBtn) {
+		closeInfoBtn.addEventListener('click', function() {
+			infoModal.setAttribute('aria-hidden', 'true');
+		});
+	}
 
-// Close modal when clicking outside
-if (infoModal) {
-infoModal.addEventListener('click', function(e) {
-if (e.target === infoModal) {
-infoModal.setAttribute('aria-hidden', 'true');
-}
-});
-}
+	// Close modal when clicking outside
+	if (infoModal) {
+		infoModal.addEventListener('click', function(e) {
+			if (e.target === infoModal) {
+				infoModal.setAttribute('aria-hidden', 'true');
+			}
+		});
+	}
+
+	// PDF Guide modal functionality
+	const guideBtn = document.getElementById('guideBtn');
+	const guideModal = document.getElementById('guideModal');
+	const closeGuideBtn = document.getElementById('closeGuideBtn');
+	const guideFrame = document.getElementById('guideFrame');
+
+	// Open guide modal
+	if (guideBtn) {
+		guideBtn.addEventListener('click', function() {
+			console.log('Guide button clicked');
+			guideModal.setAttribute('aria-hidden', 'false');
+			if (!guideFrame.src) {
+				guideFrame.src = 'Wood Heat Guide.pdf';
+			}
+		});
+	}
+
+	// Close guide modal
+	if (closeGuideBtn) {
+		closeGuideBtn.addEventListener('click', function() {
+			guideModal.setAttribute('aria-hidden', 'true');
+		});
+	}
+
+	// Close modal when clicking outside
+	if (guideModal) {
+		guideModal.addEventListener('click', function(e) {
+			if (e.target === guideModal) {
+				guideModal.setAttribute('aria-hidden', 'true');
+			}
+		});
+	}
 });

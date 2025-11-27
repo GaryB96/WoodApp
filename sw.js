@@ -1,4 +1,4 @@
-const CACHE_NAME = 'woodapp-v1.1';
+const CACHE_NAME = 'woodapp-v1.0';
 
 const PRECACHE_URLS = [
   './',
@@ -8,7 +8,8 @@ const PRECACHE_URLS = [
   './manifest.json',
   './stovemanufacturers.json',
   './woodicon.png',
-  './README.md'
+  './README.md',
+  './Wood Heat Guide.pdf'
 ];
 
 self.addEventListener('install', event => {
