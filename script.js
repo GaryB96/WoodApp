@@ -2749,47 +2749,82 @@ function applyTypeRules(val) {
 	const closeGuideBtn = document.getElementById('closeGuideBtn');
 	const downloadGuideBtn = document.getElementById('downloadGuideBtn');
 	const guideFrame = document.getElementById('guideFrame');
+	const pdfCanvasContainer = document.getElementById('pdfCanvasContainer');
+	const pdfViewerContainer = document.getElementById('pdfViewerContainer');
 
 	// Detect if device is mobile and if running as PWA
 	const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 	const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 	const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
+	let currentPdfDoc = null;
+
+	// Function to render PDF using PDF.js
+	async function renderPdfInModal(url) {
+		if (!window.pdfjsLib) {
+			console.error('PDF.js not loaded');
+			return false;
+		}
+
+		try {
+			const loadingTask = pdfjsLib.getDocument(url);
+			const pdf = await loadingTask.promise;
+			currentPdfDoc = pdf;
+			
+			// Clear previous canvases
+			pdfCanvasContainer.innerHTML = '';
+			
+			// Render all pages
+			const containerWidth = pdfViewerContainer.clientWidth - 20; // Account for padding
+			
+			for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+				const page = await pdf.getPage(pageNum);
+				
+				// Calculate scale to fit width
+				const viewport = page.getViewport({ scale: 1.0 });
+				const scale = containerWidth / viewport.width;
+				const scaledViewport = page.getViewport({ scale: scale });
+				
+				// Create canvas
+				const canvas = document.createElement('canvas');
+				canvas.style.display = 'block';
+				canvas.style.margin = '0 auto 10px auto';
+				canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+				canvas.width = scaledViewport.width;
+				canvas.height = scaledViewport.height;
+				
+				const context = canvas.getContext('2d');
+				
+				// Render page
+				await page.render({
+					canvasContext: context,
+					viewport: scaledViewport
+				}).promise;
+				
+				pdfCanvasContainer.appendChild(canvas);
+			}
+			
+			return true;
+		} catch (error) {
+			console.error('Error rendering PDF:', error);
+			return false;
+		}
+	}
+
 	// Open guide modal
 	if (guideBtn) {
 		guideBtn.addEventListener('click', async function() {
 			console.log('Guide button clicked', { isIOS, isPWA });
 			
-			// On iOS PWA, we need to download/share the PDF since iframe doesn't work well
+			// On iOS PWA, use PDF.js to render in modal
 			if (isIOS && isPWA) {
-				try {
-					// Fetch the PDF as a blob
-					const response = await fetch('Wood Heat Guide.pdf');
-					const blob = await response.blob();
-					const file = new File([blob], 'Wood Heat Guide.pdf', { type: 'application/pdf' });
-					
-					// Try to use Share API (works in iOS PWA)
-					if (navigator.canShare && navigator.canShare({ files: [file] })) {
-						await navigator.share({
-							files: [file],
-							title: 'Wood Heat Guide',
-							text: 'Wood Heat Guide PDF'
-						});
-					} else {
-						// Fallback: trigger download
-						const url = URL.createObjectURL(blob);
-						const link = document.createElement('a');
-						link.href = url;
-						link.download = 'Wood Heat Guide.pdf';
-						document.body.appendChild(link);
-						link.click();
-						document.body.removeChild(link);
-						URL.revokeObjectURL(url);
-						alert('PDF downloaded. Open from Files app to view all pages.');
-					}
-				} catch (error) {
-					console.error('Error sharing/downloading PDF:', error);
-					alert('Please use the Download button to save the PDF to your device.');
+				guideModal.setAttribute('aria-hidden', 'false');
+				guideFrame.style.display = 'none';
+				pdfCanvasContainer.style.display = 'block';
+				
+				const success = await renderPdfInModal('Wood Heat Guide.pdf');
+				if (!success) {
+					alert('Unable to load PDF. Please try downloading it instead.');
 				}
 			} else if (isIOS) {
 				// iOS in browser (not PWA) - open in new tab
@@ -2804,7 +2839,9 @@ function applyTypeRules(val) {
 				// On Android, open PDF in new tab
 				window.open('Wood Heat Guide.pdf', '_blank');
 			} else {
-				// On desktop, show in modal
+				// On desktop, show in modal with iframe
+				guideFrame.style.display = 'block';
+				pdfCanvasContainer.style.display = 'none';
 				guideModal.setAttribute('aria-hidden', 'false');
 				if (!guideFrame.src) {
 					guideFrame.src = 'Wood Heat Guide.pdf#toolbar=1&navpanes=1&scrollbar=1';
@@ -2841,6 +2878,9 @@ function applyTypeRules(val) {
 	if (closeGuideBtn) {
 		closeGuideBtn.addEventListener('click', function() {
 			guideModal.setAttribute('aria-hidden', 'true');
+			guideFrame.src = '';
+			pdfCanvasContainer.innerHTML = '';
+			currentPdfDoc = null;
 		});
 	}
 

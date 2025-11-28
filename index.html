@@ -337,13 +337,23 @@
           <button id="closeGuideBtn" type="button" style="padding:8px 16px;">Close</button>
         </div>
       </div>
-      <div style="flex:1; overflow:hidden;">
-        <iframe id="guideFrame" style="width:100%; height:100%; border:1px solid #ccc; border-radius:4px;" title="Wood Heat Guide"></iframe>
+      <div id="pdfViewerContainer" style="flex:1; overflow-y:auto; overflow-x:hidden; background:#525659; padding:10px; border-radius:4px;">
+        <iframe id="guideFrame" style="width:100%; height:100%; border:1px solid #ccc; border-radius:4px; background:white; display:block;" title="Wood Heat Guide"></iframe>
+        <div id="pdfCanvasContainer" style="display:none;"></div>
       </div>
-      <p class="mobile-pdf-hint" style="display:none; margin-top:8px; text-align:center; font-size:0.9em; color:#666;">Tip: Use pinch-to-zoom and swipe to navigate the PDF. Or download to view in your device's PDF reader.</p>
+      <p class="mobile-pdf-hint" style="display:none; margin-top:8px; text-align:center; font-size:0.9em; color:#666;">Scroll to view all pages</p>
     </div>
   </div>
 
+  <!-- PDF.js library for iOS PWA support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    // Set PDF.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  
   <!-- jsPDF for client-side PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
