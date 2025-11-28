@@ -2750,16 +2750,58 @@ function applyTypeRules(val) {
 	const downloadGuideBtn = document.getElementById('downloadGuideBtn');
 	const guideFrame = document.getElementById('guideFrame');
 
-	// Detect if device is mobile
+	// Detect if device is mobile and if running as PWA
 	const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+	const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+	const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
 	// Open guide modal
 	if (guideBtn) {
-		guideBtn.addEventListener('click', function() {
-			console.log('Guide button clicked');
+		guideBtn.addEventListener('click', async function() {
+			console.log('Guide button clicked', { isIOS, isPWA });
 			
-			// On mobile, open PDF in new tab for better experience
-			if (isMobileDevice) {
+			// On iOS PWA, we need to download/share the PDF since iframe doesn't work well
+			if (isIOS && isPWA) {
+				try {
+					// Fetch the PDF as a blob
+					const response = await fetch('Wood Heat Guide.pdf');
+					const blob = await response.blob();
+					const file = new File([blob], 'Wood Heat Guide.pdf', { type: 'application/pdf' });
+					
+					// Try to use Share API (works in iOS PWA)
+					if (navigator.canShare && navigator.canShare({ files: [file] })) {
+						await navigator.share({
+							files: [file],
+							title: 'Wood Heat Guide',
+							text: 'Wood Heat Guide PDF'
+						});
+					} else {
+						// Fallback: trigger download
+						const url = URL.createObjectURL(blob);
+						const link = document.createElement('a');
+						link.href = url;
+						link.download = 'Wood Heat Guide.pdf';
+						document.body.appendChild(link);
+						link.click();
+						document.body.removeChild(link);
+						URL.revokeObjectURL(url);
+						alert('PDF downloaded. Open from Files app to view all pages.');
+					}
+				} catch (error) {
+					console.error('Error sharing/downloading PDF:', error);
+					alert('Please use the Download button to save the PDF to your device.');
+				}
+			} else if (isIOS) {
+				// iOS in browser (not PWA) - open in new tab
+				const link = document.createElement('a');
+				link.href = 'Wood Heat Guide.pdf';
+				link.target = '_blank';
+				link.rel = 'noopener noreferrer';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+			} else if (isMobileDevice) {
+				// On Android, open PDF in new tab
 				window.open('Wood Heat Guide.pdf', '_blank');
 			} else {
 				// On desktop, show in modal
@@ -2773,11 +2815,25 @@ function applyTypeRules(val) {
 
 	// Download guide button
 	if (downloadGuideBtn) {
-		downloadGuideBtn.addEventListener('click', function() {
-			const link = document.createElement('a');
-			link.href = 'Wood Heat Guide.pdf';
-			link.download = 'Wood Heat Guide.pdf';
-			link.click();
+		downloadGuideBtn.addEventListener('click', async function() {
+			try {
+				const response = await fetch('Wood Heat Guide.pdf');
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = 'Wood Heat Guide.pdf';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				URL.revokeObjectURL(url);
+			} catch (error) {
+				console.error('Download failed:', error);
+				const link = document.createElement('a');
+				link.href = 'Wood Heat Guide.pdf';
+				link.download = 'Wood Heat Guide.pdf';
+				link.click();
+			}
 		});
 	}
 
