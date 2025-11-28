@@ -2759,7 +2759,7 @@ function applyTypeRules(val) {
 
 	let currentPdfDoc = null;
 
-	// Function to render PDF using PDF.js
+	// Function to render PDF using PDF.js with high quality
 	async function renderPdfInModal(url) {
 		if (!window.pdfjsLib) {
 			console.error('PDF.js not loaded');
@@ -2767,39 +2767,52 @@ function applyTypeRules(val) {
 		}
 
 		try {
+			// Show loading indicator
+			pdfCanvasContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#fff;"><div class="pdf-spinner"></div><p style="margin-top:20px;">Loading PDF...</p></div>';
+			
 			const loadingTask = pdfjsLib.getDocument(url);
 			const pdf = await loadingTask.promise;
 			currentPdfDoc = pdf;
 			
-			// Clear previous canvases
+			// Clear loading indicator
 			pdfCanvasContainer.innerHTML = '';
 			
-			// Render all pages
+			// Render all pages with high quality
 			const containerWidth = pdfViewerContainer.clientWidth - 20; // Account for padding
+			
+			// Use device pixel ratio for crisp rendering (2x or 3x on retina displays)
+			const pixelRatio = window.devicePixelRatio || 1;
 			
 			for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
 				const page = await pdf.getPage(pageNum);
 				
-				// Calculate scale to fit width
+				// Calculate scale to fit width, then multiply by pixel ratio for high DPI
 				const viewport = page.getViewport({ scale: 1.0 });
-				const scale = containerWidth / viewport.width;
+				const scale = (containerWidth / viewport.width) * 2.5; // Increased base scale for better quality
 				const scaledViewport = page.getViewport({ scale: scale });
 				
-				// Create canvas
+				// Create canvas with higher resolution
 				const canvas = document.createElement('canvas');
 				canvas.style.display = 'block';
 				canvas.style.margin = '0 auto 10px auto';
 				canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-				canvas.width = scaledViewport.width;
-				canvas.height = scaledViewport.height;
+				canvas.style.width = containerWidth + 'px';
+				canvas.style.height = (scaledViewport.height / scaledViewport.width * containerWidth) + 'px';
+				
+				// Set actual canvas size higher for better quality
+				canvas.width = scaledViewport.width * pixelRatio;
+				canvas.height = scaledViewport.height * pixelRatio;
 				
 				const context = canvas.getContext('2d');
+				context.scale(pixelRatio, pixelRatio);
 				
-				// Render page
-				await page.render({
+				// Render page with high quality viewport
+				const renderContext = {
 					canvasContext: context,
 					viewport: scaledViewport
-				}).promise;
+				};
+				
+				await page.render(renderContext).promise;
 				
 				pdfCanvasContainer.appendChild(canvas);
 			}
@@ -2807,6 +2820,7 @@ function applyTypeRules(val) {
 			return true;
 		} catch (error) {
 			console.error('Error rendering PDF:', error);
+			pdfCanvasContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#fff;"><p>Error loading PDF. Please try downloading instead.</p></div>';
 			return false;
 		}
 	}
