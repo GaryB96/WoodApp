@@ -264,11 +264,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		const drafts = getAllDrafts();
 		const hasDrafts = drafts.length > 0;
 		
-		if (draftIndicator) {
-			draftIndicator.style.display = hasDrafts ? 'inline' : 'none';
-			draftIndicator.textContent = hasDrafts ? `📝 ${drafts.length} Draft${drafts.length > 1 ? 's' : ''} Available` : '';
-		}
-		
 		if (manageDraftsBtn) {
 			manageDraftsBtn.style.display = hasDrafts ? 'inline-block' : 'none';
 		}
