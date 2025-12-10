@@ -406,7 +406,7 @@ body.dark-mode th, body.dark-mode td { border-color:#223241; }
 body.dark-mode thead th { background:#172635; color:#e6eef6; }
 body.dark-mode .floor-pad { background:#172635; color:#e6eef6; }
 body.dark-mode .materials-table tbody tr { background:#0b1520; }
-body.dark-mode .modal-content { background:#223346; color:#e6eef6; border:1px solid #233044; }
+body.dark-mode .modal-content { background:#223346; color:#2d93f8; border:1px solid #233044; }
 
 /* Dark mode info modal */
 body.dark-mode .info-content h1,
